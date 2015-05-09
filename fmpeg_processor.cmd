@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.03.1
+echo Simple FFMPEG Action Script - Version 2015.05.10.1
 
 if "%~dpnx1" == "" goto help
 
@@ -18,6 +18,7 @@ set audio_params=
 set stream_params=
 set video_params=
 set result_filename=
+set vidstab_logfile=
 
 set param_s_audio_type=
 set param_s_video_type=
@@ -472,7 +473,7 @@ rem --- SUBROUTINES
 :render_filtercomplex_params
   set filter_params=-filter_complex "%maps% concat=n=%counter%:v=1:a=1 [v] [a]" -map "[v]" -map "[a]"
   goto eob
-    8     
+
          
 :render_audio_params 
   set audiobitrate=
@@ -542,6 +543,8 @@ rem --- SUBROUTINES
   set vfilter_noise=
   set vfilter_fade=
   set vfilter_deinterl=
+  
+  set vidstab_logfile=vidstab_%random%%random%%random%.trf
 
   if not "%param_s_crf%" == "" set crf=-crf %param_s_crf%
   if not "%param_s_bitrate%" == "" set bitrate=-b:v %param_s_bitrate%k
@@ -565,7 +568,7 @@ rem --- SUBROUTINES
   
   if not x%videowidth% == x set vfilter_scale=,scale=%videowidth%:%param_s_videoheight%
   
-  if not "%param_s_effects%" == "%param_s_effects:s=_%" set vfilter_deshake=,vidstabtransform=smoothing=20:optzoom=0:zoom=5:optalgo=avg:relative=1
+  if not "%param_s_effects%" == "%param_s_effects:s=_%" set vfilter_deshake=,vidstabtransform=smoothing=20:optzoom=0:zoom=5:optalgo=avg:relative=1:input=%vidstab_logfile%
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set vfilter_fade=,fade=in:st=0.5:d=2.5
   if not "%param_s_effects%" == "%param_s_effects:1=_%" set vfilter_unsharp=,unsharp=5:5:1.0:5:5:1.0
   if not "%param_s_effects%" == "%param_s_effects:2=_%" set vfilter_unsharp=,unsharp=5:5:2.0:5:5:2.0
@@ -612,7 +615,7 @@ rem --- SUBROUTINES
   if "%param_s_effects%" == "%param_s_effects:s=_%" goto execute_ffmpeg__start_encoding
   
   @echo on 
-  ffmpeg.exe -y %sources% -an %stream_params% -vf "vidstabdetect=shakiness=10:stepsize=12" -vcodec rawvideo -f null -
+  ffmpeg.exe -y %sources% -an %stream_params% -vf "vidstabdetect=shakiness=10:stepsize=12:result=%vidstab_logfile%" -vcodec rawvideo -f null -
   @echo off
   
   :execute_ffmpeg__start_encoding
@@ -623,17 +626,23 @@ rem --- SUBROUTINES
   ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% "%result_filename%"
   @echo off
 
-  goto eob
+  goto execute_ffmpeg__finalize
 
   :execute_ffmpeg__twopass
   
   @echo on
-  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" "%result_filename%"
+  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" -f null -
   @echo off
   ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 2 -passlogfile "%result_2passlog_pre%" "%result_filename%"
 
   del /f /q "%result_2passlog_pre%*log*"
 
+  goto execute_ffmpeg__finalize
+  
+  :execute_ffmpeg__finalize
+
+  del /f /q "%~dp0%vidstab_logfile%"
+  
   goto eob
   
   
