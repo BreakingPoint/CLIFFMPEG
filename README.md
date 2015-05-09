@@ -22,3 +22,4 @@ it in the SendTo folder. You then have access using the context menu option
 "Send To" when selecting one or many files in the Windows Explorer:
 %appdata%\Microsoft\Windows\SendTo
 
+<img src="http://i.imgur.com/CAJh9gs.gif">
