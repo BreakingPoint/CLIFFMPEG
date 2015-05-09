@@ -1,2 +1,6 @@
 - Render video from picture file and audio file
 - Extend source video to 16:9 by blurring+zooming the source and fill the "black bars" with the result
+- Merge multiple audio files into one
+- Audio normalizing
+- Preset selection and Q&A skip if selected
+- Output result as stream
