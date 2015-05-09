@@ -5,7 +5,7 @@ Simple Windows CLI script FFMPEG wrapper to execute the most common task. The us
 Drag'n'drop files onto the batch file to:
 - Join videos into a single video.
 - Batch process videos into new videos.
-- Extract audio file^(s^) from video file^(s^).
+- Extract audio file(s) from video file(s).
 - Replace audio track in a video file.
 
 Replacing audio is done by dropping one video and one music file onto the
