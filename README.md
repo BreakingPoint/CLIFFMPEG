@@ -5,8 +5,9 @@ Simple Windows CLI script FFMPEG wrapper to execute the most common tasks. The u
 Drag'n'drop file(s) onto the batch file to:
 - Join videos into a single video.
 - (Batch) process video(s) into new video(s)
+- Generate JPEG gallery from a video
 - Extract audio file(s) from video file(s).
-- Rerender audio files
+- Rerender audio file(s)
 - Replace audio track in a video file.
 - Cut segment from video
 
@@ -18,7 +19,7 @@ Available effects:
 - Stabilizing
 - Deinterlacing
 - Add grain (for dithering blocky low quality sources)
-- Fade in
+- Fade in from black
 
 Replacing audio is done by dropping one video and one music file onto the batch file.
 
