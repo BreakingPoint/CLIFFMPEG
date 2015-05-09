@@ -14,7 +14,7 @@ Features optional 2-pass-encoding.
 
 Available effects:
 - Sharpening
-- Resize via cropping/padding (black bars)/resizing
+- Resize via cropping/padding (black bars)/fitting
 - Stabilizing
 - Deinterlacing
 - Add grain (for dithering blocky low quality sources)
