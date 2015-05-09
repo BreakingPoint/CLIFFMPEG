@@ -3,4 +3,5 @@
 - Merge multiple audio files into one
 - Audio normalizing
 - Preset selection and Q&A skip if selected
-- Output result as stream
+- Output result as stream (see https://trac.ffmpeg.org/wiki/StreamingGuide )
+- 
