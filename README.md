@@ -1,16 +1,16 @@
 # CLIFFMPEG
 
-Simple Windows CLI script FFMPEG wrapper to execute the most common task. The user defines the task via a Q&amp;A interface.
+Simple Windows CLI script FFMPEG wrapper to execute the most common tasks. The user defines the task via a Q&amp;A interface.
 
-Drag'n'drop files onto the batch file to:
+Drag'n'drop file(s) onto the batch file to:
 - Join videos into a single video.
-- Batch process videos into new videos (or a single video)
+- (Batch) process video(s) into new video(s)
 - Extract audio file(s) from video file(s).
 - Rerender audio files
 - Replace audio track in a video file.
 - Cut segment from video
 
-Features optional 2-pass-encoding for videos.
+Features optional 2-pass-encoding.
 
 Available effects:
 - Sharpening
