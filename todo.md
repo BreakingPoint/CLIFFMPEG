@@ -1,0 +1,2 @@
+- Render video from picture file and audio file
+- Extend source video to 16:9 by blurring+zooming the source and fill the "black bars" with the result
