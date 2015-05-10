@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.10.1
+echo Simple FFMPEG Action Script - Version 2015.05.10.2
 
 if "%~dpnx1" == "" goto help
 
@@ -162,6 +162,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
     if /i x%param_s_video_type% == xm set result_ext=.mpg
     if /i x%param_s_video_type% == xx set result_ext=.avi
     if /i x%param_s_video_type% == xj set result_ext=.jpg
+    if /i x%param_s_video_type% == xw set result_ext=.webm
   )
 
   set result_file="%~dpn1%result_ext%"
@@ -254,6 +255,7 @@ rem --- SUBROUTINES
   echo [H]264 encoding (default)
   echo [X]Vid encoding
   echo [M]PEG2 encoding
+  echo [W]EBM encoding
   echo [J]PEG images sequence
   set /p param_s_video_type=^>
   if /i x%param_s_video_type% == x set param_s_video_type=h
@@ -396,6 +398,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xh set default_audio_type=a
   if /i x%param_s_video_type% == xm set default_audio_type=2
   if /i x%param_s_video_type% == xc set default_audio_type=c
+  if /i x%param_s_video_type% == xw set default_audio_type=o
   
   if /i x%param_s_video_type% == xj (
     set param_s_audio_type=n
@@ -410,7 +413,7 @@ rem --- SUBROUTINES
   if x%default_audio_type% == xa ( echo [A]AC - experimental aac ^(default^) ) else ( echo [A]AC - experimental aac )
   if x%default_audio_type% == xm ( echo [M]P3 - libmp3lame ^(default^)       ) else ( echo [M]P3 - libmp3lame )
   if x%default_audio_type% == x2 ( echo MP[2] - mp2 ^(default^)              ) else ( echo MP[2] - mp2 )
-  echo [O]GG - libvorbis
+  if x%default_audio_type% == xo ( echo [O]GG - libvorbis ^(default^)        ) else ( echo [O]GG - libvorbis )
   set /p param_s_audio_type=^>
   if x%param_s_audio_type% == x set param_s_audio_type=%default_audio_type%
   set param_audiobitrate=
@@ -554,6 +557,7 @@ rem --- SUBROUTINES
   if /i "%param_s_video_type%" == "m" set encoder=-vcodec mpeg2video
   if /i "%param_s_video_type%" == "x" set encoder=-vcodec libxvid
   if /i "%param_s_video_type%" == "j" set encoder=-f image2
+  if /i "%param_s_video_type%" == "w" set encoder=-vcodec libvpx
   
   if /i not "%param_s_video_type%" == "c" if not "%param_s_aspect%" == "" (
     set aspect=-aspect %param_s_aspect%
