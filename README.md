@@ -2,7 +2,9 @@
 
 Simple Windows CLI script FFMPEG wrapper to execute the most common tasks. The user defines the task via a Q&amp;A interface.
 
-Drag'n'drop file(s) onto the batch file to:
+Tested with FFMPEG N-71839-g6197672. Other versions of FFMPEG might create errors when run with this script.
+
+Drag'n'drop file(s) onto the script file to:
 - Join videos into a single video.
 - (Batch) process video(s) into new video(s)
 - Generate JPEG gallery from a video
@@ -11,7 +13,8 @@ Drag'n'drop file(s) onto the batch file to:
 - Replace audio track in a video file.
 - Cut segment from video
 
-Features optional 2-pass-encoding.
+Supported output video formats (incl. 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, raw copy.
+Supported output audio formats: WAV, MP3, MP2, AAC, OGG, raw copy.
 
 Available effects:
 - Sharpening
@@ -21,14 +24,14 @@ Available effects:
 - Add grain (for dithering blocky low quality sources)
 - Fade in from black
 
-Replacing audio is done by dropping one video and one music file onto the batch file.
+Replacing audio is done by dropping one video and one music file onto the script file.
 
-Needs ffmpeg.exe in the folder of the batch file or the ffmpeg.exe folder in PATH.
+Needs ffmpeg.exe in the folder of the script file or the ffmpeg.exe folder in PATH.
 http://www.ffmpeg.org/
 
 Developed under Windows 7, 64Bit.
  
-If you want the batch as a context menu option for files, create a link to it in the SendTo folder. You then have access using the context menu option "Send To" when selecting one or many files in the Windows Explorer:
+If you want the script as a context menu option for files, create a link to it in the SendTo folder. You then have access using the context menu option "Send To" when selecting one or many files in the Windows Explorer:
 
 %appdata%\Microsoft\Windows\SendTo
 
