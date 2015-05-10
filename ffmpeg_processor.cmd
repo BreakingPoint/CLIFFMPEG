@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.10.2
+echo Simple FFMPEG Action Script - Version 2015.05.11.1
 
 if "%~dpnx1" == "" goto help
 
@@ -645,7 +645,7 @@ rem --- SUBROUTINES
   
   :execute_ffmpeg__finalize
 
-  del /f /q "%~dp0%vidstab_logfile%"
+  if not "%vidstab_logfile%" == "" del /f /q "%~dp0%vidstab_logfile%"
   
   goto eob
   
