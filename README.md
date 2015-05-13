@@ -14,7 +14,7 @@ Drag'n'drop file(s) onto the script file to:
 - Cut segment from video
 
 Supported output video formats (incl. 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, raw copy.
-Supported output audio formats: WAV, MP3, MP2, AAC, OGG, raw copy.
+Supported output audio formats: WAV, MP3, MP2, AAC, OGG, FLAC, raw copy.
 
 Available effects:
 - Sharpening
