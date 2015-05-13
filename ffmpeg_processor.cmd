@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.11.1
+echo Simple FFMPEG Action Script - Version 2015.05.14.1
 
 if "%~dpnx1" == "" goto help
 
@@ -156,6 +156,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
     if /i x%param_s_audio_type% == xm set result_ext=.mp3
     if /i x%param_s_audio_type% == xa set result_ext=.m4a
     if /i x%param_s_audio_type% == xo set result_ext=.ogg
+    if /i x%param_s_audio_type% == xf set result_ext=.flac
   ) else (
     set result_ext=.mp4
     if /i x%param_s_video_type% == xc set result_ext=%~x1
@@ -408,16 +409,18 @@ rem --- SUBROUTINES
   echo.
   echo Set audio encoder:
   if x%default_audio_type% == xn ( echo [N]o audio ^(default^)  ) else ( echo [N]o audio )
-  echo [W]AV
   if x%default_audio_type% == xc ( echo [C]opy from source file ^(default^)  ) else ( echo [C]opy from source file )
-  if x%default_audio_type% == xa ( echo [A]AC - experimental aac ^(default^) ) else ( echo [A]AC - experimental aac )
+  echo [W]AV
+  echo [F]LAC
   if x%default_audio_type% == xm ( echo [M]P3 - libmp3lame ^(default^)       ) else ( echo [M]P3 - libmp3lame )
-  if x%default_audio_type% == x2 ( echo MP[2] - mp2 ^(default^)              ) else ( echo MP[2] - mp2 )
   if x%default_audio_type% == xo ( echo [O]GG - libvorbis ^(default^)        ) else ( echo [O]GG - libvorbis )
+  if x%default_audio_type% == xa ( echo [A]AC - experimental aac ^(default^) ) else ( echo [A]AC - experimental aac )
+  if x%default_audio_type% == x2 ( echo MP[2] - mp2 ^(default^)              ) else ( echo MP[2] - mp2 )
   set /p param_s_audio_type=^>
   if x%param_s_audio_type% == x set param_s_audio_type=%default_audio_type%
   set param_audiobitrate=
   if /i x%param_s_audio_type% == xw goto collect_base_params__next
+  if /i x%param_s_audio_type% == xf goto collect_base_params__next
   if /i x%param_s_audio_type% == xc goto collect_base_params__next
   
   set default_audio_bitrate=192
@@ -490,17 +493,22 @@ rem --- SUBROUTINES
     goto eob
   )
 
-  if /i "%param_s_audio_type%" == "w" (
-    set audio_params=-acodec pcm_s16le -ac 2 -ar 44100
-    goto eob
-  )
-
   if /i "%param_s_audio_type%" == "n" (
     set audio_params=-an
     goto eob
   )
 
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
+
+  if /i "%param_s_audio_type%" == "w" (
+    set audio_params=-acodec pcm_s16le -ac 2 -ar 44100
+    goto eob
+  )
+
+  if /i "%param_s_audio_type%" == "f" (
+    set audio_params=-acodec flac -ac 2 -compression_level 8
+    goto eob
+  )
 
   set audiobitrate=-ab %param_audiobitrate%k
 
