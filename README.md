@@ -30,11 +30,9 @@ Needs ffmpeg.exe in the folder of the script file or the ffmpeg.exe folder in PA
 http://www.ffmpeg.org/
 
 Developed under Windows 7, 64Bit.
- 
-If you want the script as a context menu option for files, create a link to it in the SendTo folder. You then have access using the context menu option "Send To" when selecting one or many files in the Windows Explorer:
-
-%appdata%\Microsoft\Windows\SendTo
 
 <img src="http://i.imgur.com/CAJh9gs.gif">
+ 
+If you want the script as a context menu option for files, the script creates a link to it in the SendTo folder. You then have access using the context menu option "Send To" when selecting one or many files in the Windows Explorer:
 
 <img src="http://i.imgur.com/9sGZ50I.gif">
