@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.14.1
+echo Simple FFMPEG Action Script - Version 2015.05.14.2
 
 if "%~dpnx1" == "" goto help
 
@@ -657,12 +657,39 @@ rem --- SUBROUTINES
   
   goto eob
   
+
+:createsendto
+  set cstcreatescript=ffmpeg_processor_createsendto.js
+  set csttargetpath="%~dpnx0"
+  set cstworkpath="%~dp0"
+  
+  echo var renderedlink = WScript.CreateObject( "WScript.Shell" ).CreateShortcut( %cstshortcutfilename:\=\\% ); > %cstcreatescript%
+  echo renderedlink.TargetPath = %csttargetpath:\=\\%; >> %cstcreatescript%
+  echo renderedlink.WorkingDirectory = %cstworkpath:\=\\%; >> %cstcreatescript%
+  echo renderedlink.IconLocation = "%SystemRoot:\=\\%\\system32\\SHELL32.dll, 68"; >> %cstcreatescript%
+  echo renderedlink.Save(); >> %cstcreatescript%
+  
+  cscript /nologo %cstcreatescript%
+  
+  del /f /q %cstcreatescript%    
+  
+  if exist %cstshortcutfilename% (
+    echo Link created. Script can now be executed from file explorer through the context
+    echo menu option "Send To" for single or multiple selected files: 
+    echo Select "FFMPEG-Processor".
+  ) else (
+    echo Link couldnt be created. Expected filename: 
+    echo %cstshortcutfilename%
+  )
+
+  goto eob
+  
   
 :help
   echo.
   echo Drag'n'drop files onto the batch file to:
   echo - Join videos into a single video.
-  echo - Batch process videos into new videos.
+  echo - ^(Batch^) process video^(s^) into new video^(s^).
   echo - Extract audio file^(s^) from video file^(s^).
   echo - Replace audio track in a video file.
   echo.
@@ -677,13 +704,28 @@ rem --- SUBROUTINES
   echo.
   echo Developed under Windows 7, 64Bit.
   echo. 
-  echo If you want the batch as a context menu option for files, create a link to
-  echo it in the SendTo folder. You then have access using the context menu option 
-  echo "Send To" when selecting one or many files in the Windows Explorer:
-  echo %appdata%\Microsoft\Windows\SendTo
-  echo.
+
+  set cstshortcutfilename="%appdata%\Microsoft\Windows\SendTo\FFMPEG-Processor.lnk"
   
-  pause
+  if exist %cstshortcutfilename% (
+    echo Script available through the Send-To option. Filename of the link:
+    echo %cstshortcutfilename%
+    echo.
+    pause 
+    goto eob
+  )
+
+  echo Do you want to have access to this script through the Send-To option of the
+  echo Windows file explorer now?
+  echo [Y]es or ENTER creates automatically a link to this script.
+  set /p ask_createlink=^>
+  if /i x%ask_createlink% == x set ask_createlink=y
+  if /i x%ask_createlink% == xy (
+    echo.
+    call :createsendto
+    echo.
+    pause
+  )
   
   goto eob
   
