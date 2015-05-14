@@ -36,3 +36,5 @@ If you want the script as a context menu option for files, create a link to it i
 %appdata%\Microsoft\Windows\SendTo
 
 <img src="http://i.imgur.com/CAJh9gs.gif">
+
+<img src="http://i.imgur.com/9sGZ50I.gif">
