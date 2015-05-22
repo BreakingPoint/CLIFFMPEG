@@ -4,3 +4,4 @@
 - Audio normalizing
 - Preset selection and Q&A skip if selected
 - Output result as stream (see https://trac.ffmpeg.org/wiki/StreamingGuide )
+- Better flexibility on joining different video sources
