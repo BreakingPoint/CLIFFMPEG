@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2015.05.14.2
+echo Simple FFMPEG Action Script - Version 2016.05.08.1
 
 if "%~dpnx1" == "" goto help
 
@@ -414,7 +414,7 @@ rem --- SUBROUTINES
   echo [F]LAC
   if x%default_audio_type% == xm ( echo [M]P3 - libmp3lame ^(default^)       ) else ( echo [M]P3 - libmp3lame )
   if x%default_audio_type% == xo ( echo [O]GG - libvorbis ^(default^)        ) else ( echo [O]GG - libvorbis )
-  if x%default_audio_type% == xa ( echo [A]AC - experimental aac ^(default^) ) else ( echo [A]AC - experimental aac )
+  if x%default_audio_type% == xa ( echo [A]AC - aac ^(default^) ) else ( echo [A]AC - aac )
   if x%default_audio_type% == x2 ( echo MP[2] - mp2 ^(default^)              ) else ( echo MP[2] - mp2 )
   set /p param_s_audio_type=^>
   if x%param_s_audio_type% == x set param_s_audio_type=%default_audio_type%
@@ -424,7 +424,7 @@ rem --- SUBROUTINES
   if /i x%param_s_audio_type% == xc goto collect_base_params__next
   
   set default_audio_bitrate=192
-  if /i x%param_s_audio_type% == xa set default_audio_bitrate=192
+  if /i x%param_s_audio_type% == xa set default_audio_bitrate=128
   if /i x%param_s_audio_type% == x2 set default_audio_bitrate=256
   if /i x%param_s_audio_type% == xo set default_audio_bitrate=128
   
@@ -643,7 +643,7 @@ rem --- SUBROUTINES
   :execute_ffmpeg__twopass
   
   @echo on
-  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" -f null -
+  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" "%result_filename%"
   @echo off
   ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 2 -passlogfile "%result_2passlog_pre%" "%result_filename%"
 
