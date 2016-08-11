@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2016.05.08.1
+echo Simple FFMPEG Action Script - Version 2016.08.11.1
 
 if "%~dpnx1" == "" goto help
 
@@ -106,7 +106,7 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   call :render_filtercomplex_params  
   call :render_audio_params 
   call :render_video_params
-  call :execute_ffmpeg %result_file%
+  call :execute_ffmpeg "%result_file%"
   
   pause
   
@@ -166,13 +166,13 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
     if /i x%param_s_video_type% == xw set result_ext=.webm
   )
 
-  set result_file="%~dpn1%result_ext%"
+  set "result_file=%~dpn1%result_ext%"
   
-  if exist %result_file% (
+  if exist "%result_file%" (
     if /i not "%action_batch_mode%" == "v" (
-      set result_file="%~dpn1.audio_extract%result_ext%"
+      set "result_file=%~dpn1.audio_extract%result_ext%"
     ) else (
-      set result_file="%~dpn1.new_video%result_ext%"
+      set "result_file=%~dpn1.new_video%result_ext%"
     )
   )
   
@@ -188,7 +188,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   
   set sources=%start_at% -i %1
   
-  call :execute_ffmpeg %result_file%
+  call :execute_ffmpeg "%result_file%"
 
   shift
   
@@ -213,11 +213,11 @@ rem --- REPLACE AUDIO IN VIDEO
   
   if %audiofileidx% == 1 (
     set sources=-i "%~dpnx2" -i "%~dpnx1" 
-    set result_file="%~dpn2.new_audio%~x2"
+    set "result_file=%~dpn2.new_audio%~x2"
     set boxtitle="%~n2"
   ) else (
     set sources=-i "%~dpnx1" -i "%~dpnx2" 
-    set result_file="%~dpn1.new_audio%~x1"
+    set "result_file=%~dpn1.new_audio%~x1"
     set boxtitle="%~n1"
   )
   
@@ -233,7 +233,7 @@ rem --- REPLACE AUDIO IN VIDEO
   call :render_audio_params 
   call :render_video_params 
 
-  call :execute_ffmpeg %result_file%
+  call :execute_ffmpeg "%result_file%"
   
   pause
 
@@ -602,19 +602,19 @@ rem --- SUBROUTINES
 
 
 :execute_ffmpeg
-  set result_filename_pre=%~dpn1
-  set result_filename_post=%~x1
-  set result_filename=%result_filename_pre%%result_filename_post%
-  set result_2passlog_pre=%result_filename_pre%
+  set "result_filename_pre=%~dpn1"
+  set "result_filename_post=%~x1"
+  set "result_filename=%result_filename_pre%%result_filename_post%"
+  set "result_2passlog_pre=%result_filename_pre%_%random%"
   
-  if /i "%param_s_video_type%" == "j" set result_filename=%result_filename_pre%.%%12d%result_filename_post%
+  if /i "%param_s_video_type%" == "j" set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
 
   if not exist "%result_filename%" goto execute_ffmpeg__run
   
   set /a result_filenamecounter=0
   :execute_ffmpeg__findfilename
   set /a result_filenamecounter+=1
-  set result_filename=%result_filename_pre%.%result_filenamecounter%%result_filename_post%
+  set "result_filename=%result_filename_pre%.%result_filenamecounter%%result_filename_post%"
   if exist "%result_filename%" goto execute_ffmpeg__findfilename
 
   :execute_ffmpeg__run
@@ -660,8 +660,8 @@ rem --- SUBROUTINES
 
 :createsendto
   set cstcreatescript=ffmpeg_processor_createsendto.js
-  set csttargetpath="%~dpnx0"
-  set cstworkpath="%~dp0"
+  set "csttargetpath=%~dpnx0"
+  set "cstworkpath=%~dp0"
   
   echo var renderedlink = WScript.CreateObject( "WScript.Shell" ).CreateShortcut( %cstshortcutfilename:\=\\% ); > %cstcreatescript%
   echo renderedlink.TargetPath = %csttargetpath:\=\\%; >> %cstcreatescript%
@@ -673,7 +673,7 @@ rem --- SUBROUTINES
   
   del /f /q %cstcreatescript%    
   
-  if exist %cstshortcutfilename% (
+  if exist "%cstshortcutfilename%" (
     echo Link created. Script can now be executed from file explorer through the context
     echo menu option "Send To" for single or multiple selected files: 
     echo Select "FFMPEG-Processor".
@@ -705,9 +705,9 @@ rem --- SUBROUTINES
   echo Developed under Windows 7, 64Bit.
   echo. 
 
-  set cstshortcutfilename="%appdata%\Microsoft\Windows\SendTo\FFMPEG-Processor.lnk"
+  set "cstshortcutfilename=%appdata%\Microsoft\Windows\SendTo\FFMPEG-Processor.lnk"
   
-  if exist %cstshortcutfilename% (
+  if exist "%cstshortcutfilename%" (
     echo Script available through the Send-To option. Filename of the link:
     echo %cstshortcutfilename%
     echo.
