@@ -664,8 +664,8 @@ rem --- SUBROUTINES
   set "cstworkpath=%~dp0"
   
   echo var renderedlink = WScript.CreateObject( "WScript.Shell" ).CreateShortcut( %cstshortcutfilename:\=\\% ); > %cstcreatescript%
-  echo renderedlink.TargetPath = %csttargetpath:\=\\%; >> %cstcreatescript%
-  echo renderedlink.WorkingDirectory = %cstworkpath:\=\\%; >> %cstcreatescript%
+  echo renderedlink.TargetPath = "%csttargetpath:\=\\%"; >> %cstcreatescript%
+  echo renderedlink.WorkingDirectory = "%cstworkpath:\=\\%"; >> %cstcreatescript%
   echo renderedlink.IconLocation = "%SystemRoot:\=\\%\\system32\\SHELL32.dll, 68"; >> %cstcreatescript%
   echo renderedlink.Save(); >> %cstcreatescript%
   
