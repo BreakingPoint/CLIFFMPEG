@@ -6,3 +6,4 @@
 - Output result as stream (see https://trac.ffmpeg.org/wiki/StreamingGuide )
 - Better flexibility on joining different video sources
 - speed change but keep sound pitch
+- cut+copy soundfile (in+out)
