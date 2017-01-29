@@ -8,6 +8,7 @@ Drag'n'drop file(s) onto the script file to:
 - Join videos into a single video.
 - (Batch) process video(s) into new video(s)
 - Generate JPEG gallery from a video
+- Generate GIF animation from video
 - Extract audio file(s) from video file(s).
 - Rerender audio file(s)
 - Replace audio track in a video file.
