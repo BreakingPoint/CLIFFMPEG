@@ -2,8 +2,6 @@
 
 Simple Windows CLI script FFMPEG wrapper to execute the most common tasks. The user defines the task via a Q&amp;A interface.
 
-Tested with FFMPEG N-71839-g6197672. Other versions of FFMPEG might create errors when run with this script.
-
 Drag'n'drop file(s) onto the script file to:
 - Join videos into a single video.
 - (Batch) process video(s) into new video(s)
