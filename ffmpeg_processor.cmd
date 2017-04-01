@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.01.28.1
+echo Simple FFMPEG Action Script - Version 2017.03.29.1
 
 if "%~dpnx1" == "" goto help
 
@@ -18,7 +18,9 @@ set audio_params=
 set stream_params=
 set video_params=
 set result_filename=
+set source_params=
 set vidstab_logfile=
+set vidsrctype=video
 
 set param_s_audio_type=
 set param_s_video_type=
@@ -151,20 +153,9 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   set result_ext=
   
   if /i not "%action_batch_mode%" == "v" (
-    set result_ext=.avi
-    if /i x%param_s_audio_type% == xw set result_ext=.wav
-    if /i x%param_s_audio_type% == xm set result_ext=.mp3
-    if /i x%param_s_audio_type% == xa set result_ext=.m4a
-    if /i x%param_s_audio_type% == xo set result_ext=.ogg
-    if /i x%param_s_audio_type% == xf set result_ext=.flac
-  ) else (
-    set result_ext=.mp4
-    if /i x%param_s_video_type% == xc set result_ext=%~x1
-    if /i x%param_s_video_type% == xm set result_ext=.mpg
-    if /i x%param_s_video_type% == xx set result_ext=.avi
-    if /i x%param_s_video_type% == xj set result_ext=.jpg
-    if /i x%param_s_video_type% == xw set result_ext=.webm
-    if /i x%param_s_video_type% == xg set result_ext=.gif
+    call :render_audio_ext
+  ) else ( 
+    call :render_video_ext "%~nx1"
   )
 
   set "result_file=%~dpn1%result_ext%"
@@ -210,7 +201,15 @@ rem --- REPLACE AUDIO IN VIDEO
   rem Detect audio and video file + audio type:
   rem set param_s_audio_type=a
   set audiofileidx=1
-  if /i not "%~x1" == ".wav" if /i not "%~x1" == ".mp3" if /i not "%~x1" == ".m4a" if /i not "%~x1" == ".aac" set audiofileidx=2
+  if /i not "%~x1" == ".wav" if /i not "%~x1" == ".mp3" if /i not "%~x1" == ".m4a" if /i not "%~x1" == ".aac" if /i not "%~x1" == ".ogg" set audiofileidx=2
+  
+  set "sourceextenders=%~x1%~x2"
+  
+  if not "%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%" == "%sourceextenders:jpeg=_%%sourceextenders:jpg=_%%sourceextenders:gif=_%
+
+%sourceextenders:png=_%%sourceextenders:bmp=_%" set vidsrctype=img
+  
+  if "%vidsrctype%" == "img" goto action_replace_audio__imagevid
   
   if %audiofileidx% == 1 (
     set sources=-i "%~dpnx2" -i "%~dpnx1" 
@@ -228,9 +227,37 @@ rem --- REPLACE AUDIO IN VIDEO
   echo Replace audio:
   
   set param_s_video_type=c
+  
   call :collect_base_params audio videochannel
 
   set filter_params=-map 1:0 -map 0:%param_videochannel%
+  
+  goto action_replace_audio__render
+  
+  :action_replace_audio__imagevid
+  
+  echo.
+  echo Render video from image:
+  
+  call :collect_base_params video audio length
+  
+  call :render_video_ext
+
+  if %audiofileidx% == 1 (
+    set sources=-i "%~dpnx2" -i "%~dpnx1" 
+    set "result_file=%~dpn2%result_ext%"
+    set boxtitle="%~n2"
+  ) else (
+    set sources=-i "%~dpnx1" -i "%~dpnx2" 
+    set "result_file=%~dpn1%result_ext%"
+    set boxtitle="%~n1"
+  )
+  
+  title %boxtitle%
+  
+  :action_replace_audio__render
+
+  call :render_stream_params 
   call :render_audio_params 
   call :render_video_params 
 
@@ -239,9 +266,35 @@ rem --- REPLACE AUDIO IN VIDEO
   pause
 
   goto eob
-
+  
 
 rem --- SUBROUTINES
+
+
+:render_video_ext
+
+  set result_ext=.mp4
+  if /i x%param_s_video_type% == xc set result_ext=%~x1
+  if /i x%param_s_video_type% == xm set result_ext=.mpg
+  if /i x%param_s_video_type% == xx set result_ext=.avi
+  if /i x%param_s_video_type% == xj set result_ext=.jpg
+  if /i x%param_s_video_type% == xw set result_ext=.webm
+  if /i x%param_s_video_type% == xg set result_ext=.gif
+
+  goto eob
+              
+              
+:render_audio_ext
+
+  set result_ext=.avi
+  if /i x%param_s_audio_type% == xw set result_ext=.wav
+  if /i x%param_s_audio_type% == xm set result_ext=.mp3
+  if /i x%param_s_audio_type% == xa set result_ext=.m4a
+  if /i x%param_s_audio_type% == xo set result_ext=.ogg
+  if /i x%param_s_audio_type% == xf set result_ext=.flac
+  
+  goto eob
+
 
 :collect_base_params
 
@@ -371,7 +424,7 @@ rem --- SUBROUTINES
   echo [G] Add film grain (recomm. only for high bitr. with low quality source)
   echo [F] Fade in (3 secs from black)
   echo [I] De-Interlace
-  if /i not x%param_s_video_type% == xg echo [S] Stabilize
+  echo [S] Stabilize
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
   if x%param_s_effects% == x set param_s_effects=_
@@ -510,7 +563,8 @@ rem --- SUBROUTINES
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
 
   if /i "%param_s_audio_type%" == "w" (
-    set audio_params=-acodec pcm_s16le -ac 2 -ar 48000 
+    rem set audio_params=-acodec pcm_s16le -ac 2 -ar __SRCAUDIOHZ__ 
+    set audio_params=-acodec pcm_s16le -ac 2 
     goto eob
   )
 
@@ -521,10 +575,10 @@ rem --- SUBROUTINES
 
   set audiobitrate=-ab %param_audiobitrate%k
 
-  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -ac 2 -ar 48000 %audiobitrate% -bsf:a aac_adtstoasc
-  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -ac 2 -ar 48000 %audiobitrate%
-  if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 -ac 2 -ar 48000 %audiobitrate%
-  if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 -ar 48000 %audiobitrate%
+  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -ac 2 %audiobitrate% -bsf:a aac_adtstoasc
+  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -ac 2 %audiobitrate%
+  if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 -ac 2 %audiobitrate%
+  if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 %audiobitrate%
   
   if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_fade%"
   
@@ -557,6 +611,7 @@ rem --- SUBROUTINES
   set bitrate=
   set videowidth=
   set encoder=
+  set shortestflag=
   set vfilter_deshake=
   set vfilter_unsharp=
   set vfilter_scale=
@@ -606,11 +661,16 @@ rem --- SUBROUTINES
     set crf=
   )
   
+  if "%vidsrctype%" == "img" (
+    set source_params=-loop 1
+    set shortestflag=-shortest
+  )
+  
   if /i x%param_s_video_type% == xg goto render_video_params_animgif
   
   if not "%action_type%" == "join" set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise%"
 
-  set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate%
+  set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate% %shortestflag%
   
   goto eob
   
@@ -621,13 +681,17 @@ rem --- SUBROUTINES
   set crf=
   
   set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise% ,palettegen=stats_mode=full"
-  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] paletteuse=dither=floyd_steinberg"
+  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] 
+
+paletteuse=dither=floyd_steinberg"
   set video_params=%vfiltergraph% %fps% %aspect%
   set video_params2=%vfiltergraph2% %fps% %aspect%
 
   goto eob
   
+  
 :execute_ffmpeg
+
   set "result_filename_pre=%~dpn1"
   set "result_filename_post=%~x1"
   set "result_filename=%result_filename_pre%%result_filename_post%"
@@ -635,25 +699,21 @@ rem --- SUBROUTINES
   
   if /i x%param_s_video_type% == xj set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
 
-  if not exist "%result_filename%" goto execute_ffmpeg__run
+  if not exist "%result_filename%" goto execute_ffmpeg__afterfilenamefind
   
   set /a result_filenamecounter=0
   :execute_ffmpeg__findfilename
   set /a result_filenamecounter+=1
   set "result_filename=%result_filename_pre%.%result_filenamecounter%%result_filename_post%"
   if exist "%result_filename%" goto execute_ffmpeg__findfilename
-
-  :execute_ffmpeg__run
-  
-  echo.
-  set param_s_
-  
-  echo.
+  :execute_ffmpeg__afterfilenamefind
   
   if "%param_s_effects%" == "%param_s_effects:s=_%" goto execute_ffmpeg__start_encoding
   
+  echo.
+  
   @echo on 
-  ffmpeg.exe -y %sources% -an %stream_params% -vf "vidstabdetect=shakiness=10:stepsize=12:result=%vidstab_logfile%" -vcodec rawvideo -f null -
+  ffmpeg.exe %source_params% -y %sources% -an %stream_params% -vf "vidstabdetect=shakiness=10:stepsize=12:result=%vidstab_logfile%" -vcodec rawvideo -f null -
   @echo off
   
   :execute_ffmpeg__start_encoding
@@ -663,7 +723,7 @@ rem --- SUBROUTINES
   if /i x%param_s_2pass% == xy goto execute_ffmpeg__twopass
 
   @echo on
-  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% "%result_filename%"
+  ffmpeg.exe %source_params% -y %sources% %filter_params% %audio_params% %stream_params% %video_params% "%result_filename%"
   @echo off
 
   goto execute_ffmpeg__finalize
@@ -671,9 +731,9 @@ rem --- SUBROUTINES
   :execute_ffmpeg__twopass
   
   @echo on
-  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" "%result_filename%"
+  ffmpeg.exe %source_params% -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 1 -passlogfile "%result_2passlog_pre%" "%result_filename%"
   @echo off
-  ffmpeg.exe -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 2 -passlogfile "%result_2passlog_pre%" "%result_filename%"
+  ffmpeg.exe %source_params% -y %sources% %filter_params% %audio_params% %stream_params% %video_params% -pass 2 -passlogfile "%result_2passlog_pre%" "%result_filename%"
 
   del /f /q "%result_2passlog_pre%*log*"
 
@@ -684,8 +744,8 @@ rem --- SUBROUTINES
   del /f /q "%result_filename%.png"
   
   @echo on
-  ffmpeg.exe -y %sources% %filter_params% %stream_params% %video_params% "%result_filename%.png"
-  ffmpeg.exe -y %sources% -i "%result_filename%.png" %filter_params% %stream_params% %video_params2% "%result_filename%"
+  ffmpeg.exe %source_params% -y %sources% %filter_params% %stream_params% %video_params% "%result_filename%.png"
+  ffmpeg.exe %source_params% -y %sources% -i "%result_filename%.png" %filter_params% %stream_params% %video_params2% "%result_filename%"
   @echo off
   
   del /f /q "%result_filename%.png"
@@ -740,7 +800,6 @@ rem --- SUBROUTINES
   echo Needs ffmpeg.exe in the folder of the batch file or the ffmpeg.exe folder
   echo in PATH.
   echo.
-  echo Tested with ffmpeg version N-78758-g5156578.
   echo http://www.ffmpeg.org/
   echo.
   echo Developed under Windows 7, 64Bit.
