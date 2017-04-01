@@ -7,12 +7,13 @@ Drag'n'drop file(s) onto the script file to:
 - (Batch) process video(s) into new video(s)
 - Generate JPEG gallery from a video
 - Generate GIF animation from video
+- Generate video from image and audio file
 - Extract audio file(s) from video file(s).
 - Rerender audio file(s)
 - Replace audio track in a video file.
 - Cut segment from video
 
-Supported output video formats (incl. 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, raw copy.
+Supported output video formats (some include optional 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, GIF, raw copy.
 Supported output audio formats: WAV, MP3, MP2, AAC, OGG, FLAC, raw copy.
 
 Available effects:
