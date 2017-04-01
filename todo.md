@@ -1,4 +1,3 @@
-- Render video from picture file and audio file
 - Extend source video to 16:9 by blurring+zooming the source and fill the "black bars" with the result (Example: https://i1.creativecow.net/u/269047/example.jpg )
 - Merge multiple audio files into one
 - Audio normalizing
