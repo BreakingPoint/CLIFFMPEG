@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.03.29.1
+echo Simple FFMPEG Action Script - Version 2017.05.25.1
 
 if "%~dpnx1" == "" goto help
 
@@ -153,7 +153,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   set result_ext=
   
   if /i not "%action_batch_mode%" == "v" (
-    call :render_audio_ext
+    call :render_audio_ext "%~nx1"
   ) else ( 
     call :render_video_ext "%~nx1"
   )
@@ -205,9 +205,7 @@ rem --- REPLACE AUDIO IN VIDEO
   
   set "sourceextenders=%~x1%~x2"
   
-  if not "%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%" == "%sourceextenders:jpeg=_%%sourceextenders:jpg=_%%sourceextenders:gif=_%
-
-%sourceextenders:png=_%%sourceextenders:bmp=_%" set vidsrctype=img
+  if not "%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%" == "%sourceextenders:jpeg=_%%sourceextenders:jpg=_%%sourceextenders:gif=_%%sourceextenders:png=_%%sourceextenders:bmp=_%" set vidsrctype=img
   
   if "%vidsrctype%" == "img" goto action_replace_audio__imagevid
   
@@ -280,6 +278,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xj set result_ext=.jpg
   if /i x%param_s_video_type% == xw set result_ext=.webm
   if /i x%param_s_video_type% == xg set result_ext=.gif
+  if /i x%param_s_video_type% == xi set result_ext=.gif
 
   goto eob
               
@@ -287,6 +286,7 @@ rem --- SUBROUTINES
 :render_audio_ext
 
   set result_ext=.avi
+  if /i x%param_s_audio_type% == xc set result_ext=%~x1
   if /i x%param_s_audio_type% == xw set result_ext=.wav
   if /i x%param_s_audio_type% == xm set result_ext=.mp3
   if /i x%param_s_audio_type% == xa set result_ext=.m4a
@@ -312,12 +312,14 @@ rem --- SUBROUTINES
   echo [M]PEG2 encoding
   echo [W]EBM encoding
   echo [J]PEG images sequence
-  echo [G]IF animation
+  echo [G]IF animation (HD)
+  echo G[I]F animation (LQ)
   set /p param_s_video_type=^>
   if /i x%param_s_video_type% == x set param_s_video_type=h
   if /i x%param_s_video_type% == xc goto collect_base_params__next
   if /i x%param_s_video_type% == xj goto collect_base_params__bitrate_end
   if /i x%param_s_video_type% == xg goto collect_base_params__bitrate_end
+  if /i x%param_s_video_type% == xi goto collect_base_params__bitrate_end
 
   echo.
   echo Set video encoding quality by:
@@ -425,6 +427,8 @@ rem --- SUBROUTINES
   echo [F] Fade in (3 secs from black)
   echo [I] De-Interlace
   echo [S] Stabilize
+  echo [P] Interpolate (HD)
+  echo [O] Interpolate (LQ)
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
   if x%param_s_effects% == x set param_s_effects=_
@@ -467,6 +471,11 @@ rem --- SUBROUTINES
     goto collect_base_params__next
   )
   
+  if /i x%param_s_video_type% == xi (
+    set param_s_audio_type=n
+    goto collect_base_params__next
+  )
+  
   echo.
   echo Set audio encoder:
   if x%default_audio_type% == xn ( echo [N]o audio ^(default^)  ) else ( echo [N]o audio )
@@ -496,8 +505,12 @@ rem --- SUBROUTINES
   
   echo.
   echo Enter audio bitrate in kilobit
-  echo Examples: "128", "192", "320"
+  echo Examples: "128", "192", "320", "5"
   echo Empty input causes the using of %default_audio_bitrate% kilobit.
+  echo Values 0-10 cause the variable bitrate in the quality setting of the encoder.
+  if /i x%param_s_audio_type% == xa echo AAC: worst 1 - 5 best
+  if /i x%param_s_audio_type% == xm echo MP3: best 0 - 9 worst
+  if /i x%param_s_audio_type% == xo echo OGG: worst 0 - 10 best
   set /p param_audiobitrate=^>
   if x%param_audiobitrate% == x set param_audiobitrate=%default_audio_bitrate%
 
@@ -520,6 +533,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xc goto collect_base_params__next
   if /i x%param_s_video_type% == xj goto collect_base_params__next
   if /i x%param_s_video_type% == xg goto collect_base_params__next
+  if /i x%param_s_video_type% == xi goto collect_base_params__next
   
   echo.
   echo Two-Pass encoding?
@@ -574,9 +588,10 @@ rem --- SUBROUTINES
   )
 
   set audiobitrate=-ab %param_audiobitrate%k
+  if /i %param_audiobitrate% LEQ 10 set audiobitrate=-aq %param_audiobitrate%
 
-  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -ac 2 %audiobitrate% -bsf:a aac_adtstoasc
-  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -ac 2 %audiobitrate%
+  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -profile:a aac_main -ac 2 %audiobitrate% -bsf:a aac_adtstoasc
+  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -joint_stereo 1 -compression_level 1 -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 %audiobitrate%
   
@@ -619,6 +634,7 @@ rem --- SUBROUTINES
   set vfilter_noise=
   set vfilter_fade=
   set vfilter_deinterl=
+  set vfilter_interp=
   set video_params=
   set video_params2=
   
@@ -654,6 +670,8 @@ rem --- SUBROUTINES
   if not "%param_s_effects%" == "%param_s_effects:3=_%" set vfilter_unsharp=,unsharp=5:5:3.0:5:5:3.0
   if not "%param_s_effects%" == "%param_s_effects:g=_%" set vfilter_noise=,noise=c0s=17:c0f=a+t
   if not "%param_s_effects%" == "%param_s_effects:i=_%" set vfilter_deinterl=,kerndeint
+  if not "%param_s_effects%" == "%param_s_effects:p=_%" set vfilter_interp=,minterpolate=mi_mode=mci:me_mode=bidir:vsbmc=1
+  if not "%param_s_effects%" == "%param_s_effects:o=_%" set vfilter_interp=,minterpolate=mi_mode=blend
   
   if /i x%param_s_video_type% == xj (
     set param_s_2pass=n
@@ -667,8 +685,9 @@ rem --- SUBROUTINES
   )
   
   if /i x%param_s_video_type% == xg goto render_video_params_animgif
+  if /i x%param_s_video_type% == xi goto render_video_params_animgif
   
-  if not "%action_type%" == "join" set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise%"
+  if not "%action_type%" == "join" set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
 
   set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate% %shortestflag%
   
@@ -680,11 +699,12 @@ rem --- SUBROUTINES
   set bitrate=
   set crf=
   
-  set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise% ,palettegen=stats_mode=full"
-  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_deshake% %vfilter_fade% %vfilter_resizemode% %vfilter_scale% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] 
-
-paletteuse=dither=floyd_steinberg"
+  set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% ,palettegen=stats_mode=full"
   set video_params=%vfiltergraph% %fps% %aspect%
+  rem for GIF:
+  set gif_dither=bayer:bayer_scale=3
+  if /i x%param_s_video_type% == xi set gif_dither=none
+  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] paletteuse=dither=%gif_dither%"
   set video_params2=%vfiltergraph2% %fps% %aspect%
 
   goto eob
@@ -719,6 +739,7 @@ paletteuse=dither=floyd_steinberg"
   :execute_ffmpeg__start_encoding
 
   if /i x%param_s_video_type% == xg goto execute_ffmpeg__animgif
+  if /i x%param_s_video_type% == xi goto execute_ffmpeg__animgif
   
   if /i x%param_s_2pass% == xy goto execute_ffmpeg__twopass
 
