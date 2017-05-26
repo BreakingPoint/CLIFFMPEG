@@ -11,7 +11,7 @@ Drag'n'drop file(s) onto the script file to:
 - Extract audio file(s) from video file(s).
 - Rerender audio file(s)
 - Replace audio track in a video file.
-- Cut segment from video
+- Cut segment from audio or video
 
 Supported output video formats (some include optional 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, GIF, raw copy.
 Supported output audio formats: WAV, MP3, MP2, AAC, OGG, FLAC, raw copy.
@@ -21,6 +21,7 @@ Available effects:
 - Resize via cropping/padding (black bars)/fitting
 - Stabilizing
 - Deinterlacing
+- Frame interpolation
 - Add grain (for dithering blocky low quality sources)
 - Fade in from black
 
