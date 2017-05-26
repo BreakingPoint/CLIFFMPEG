@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.05.25.1
+echo Simple FFMPEG Action Script - Version 2017.05.26.1
 
 if "%~dpnx1" == "" goto help
 
