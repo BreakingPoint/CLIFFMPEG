@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.05.26.1
+echo Simple FFMPEG Action Script - Version 2017.05.28.1
 
 if "%~dpnx1" == "" goto help
 
@@ -292,6 +292,7 @@ rem --- SUBROUTINES
   if /i x%param_s_audio_type% == xa set result_ext=.m4a
   if /i x%param_s_audio_type% == xo set result_ext=.ogg
   if /i x%param_s_audio_type% == xf set result_ext=.flac
+  if /i x%param_s_audio_type% == x3 set result_ext=.ac3
   
   goto eob
 
@@ -486,6 +487,7 @@ rem --- SUBROUTINES
   if x%default_audio_type% == xo ( echo [O]GG - libvorbis ^(default^)        ) else ( echo [O]GG - libvorbis )
   if x%default_audio_type% == xa ( echo [A]AC - aac ^(default^) ) else ( echo [A]AC - aac )
   if x%default_audio_type% == x2 ( echo MP[2] - mp2 ^(default^)              ) else ( echo MP[2] - mp2 )
+  echo AC[3]
   set /p param_s_audio_type=^>
   if x%param_s_audio_type% == x set param_s_audio_type=%default_audio_type%
   set param_audiobitrate=
@@ -560,6 +562,7 @@ rem --- SUBROUTINES
 :render_audio_params 
   set audiobitrate=
   set afilter_fade=
+  set afilter_downmix=
   set audio_params=
 
   if "%param_s_audio_type%" == "" set param_s_audio_type=m
@@ -574,6 +577,8 @@ rem --- SUBROUTINES
     goto eob
   )
 
+  set afilter_downmix=,aresample=matrix_encoding=dplii
+  
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
 
   if /i "%param_s_audio_type%" == "w" (
@@ -594,8 +599,9 @@ rem --- SUBROUTINES
   if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -joint_stereo 1 -compression_level 1 -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 %audiobitrate%
+  if /i "%param_s_audio_type%" == "3" set audio_params=-acodec ac3 -ac 2 %audiobitrate%
   
-  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_fade%"
+  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_fade%"
   
   goto eob
 
