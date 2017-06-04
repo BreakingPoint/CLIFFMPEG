@@ -12,6 +12,7 @@ Drag'n'drop file(s) onto the script file to:
 - Rerender audio file(s)
 - Replace audio track in a video file.
 - Cut segment from audio or video
+- Encode multichannel sound (5.1) to 2 channel Dolby Pro Logic II.
 
 Supported output video formats (some include optional 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, GIF, raw copy.
 Supported output audio formats: WAV, MP3, MP2, AAC, OGG, FLAC, raw copy.
