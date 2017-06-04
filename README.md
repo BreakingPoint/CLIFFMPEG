@@ -15,7 +15,7 @@ Drag'n'drop file(s) onto the script file to:
 - Encode multichannel sound (5.1) to 2 channel Dolby Pro Logic II.
 
 Supported output video formats (some include optional 2-pass encoding): MP4, XVid, MPEG2, WEBM, JPEG images, GIF, raw copy.
-Supported output audio formats: WAV, MP3, MP2, AAC, AC3, OGG, FLAC, raw copy.
+Supported output audio formats (some with fixed or variable bitrates): WAV, MP3, MP2, AAC, AC3, OGG, FLAC, raw copy.
 
 Available effects:
 - Sharpening
