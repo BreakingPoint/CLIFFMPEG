@@ -26,7 +26,7 @@ Available effects:
 - Add grain (for dithering blocky low quality sources)
 - Fade in from black
 
-Replacing audio is done by dropping one video and one music file onto the script file.
+Replacing audio is done by dropping one video and one music file onto the script file. Or put a link to it in the send-to folder, so you can execute the script from the context menu on one or more marked files in the file explorer.
 
 Needs ffmpeg.exe in the folder of the script file or the ffmpeg.exe folder in PATH.
 http://www.ffmpeg.org/
