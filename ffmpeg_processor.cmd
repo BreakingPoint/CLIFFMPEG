@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.05.28.1
+echo Simple FFMPEG Action Script - Version 2017.06.10.1
 
 if "%~dpnx1" == "" goto help
 
@@ -40,7 +40,7 @@ rem --- Detect Action Type from parameters
 
 set action_type=
 
-set f1_isaudio=x
+set f1_isaudio=x                                                                                                                         
 set f2_isaudio=x
 if "%~dpnx2" == "" (
   set action_type=batch
@@ -69,13 +69,14 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
 
 :action_join
 
-  set result_file="%~dpn1.joined_videos.mp4"
-  
   title "%~n1"
   
   set maps=
   set maps_sw=
   set /a counter=0
+  
+  set "_basefilename=%~nx1"
+  set "_basefilename_full=%~dpnx1"
   
   echo.
   echo Videos are joined in following order:
@@ -94,8 +95,16 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   shift
   
   if not "%~n1" == "" goto collect_next_file
+
+  echo.
+  echo - IMPORTANT! For the join to work, all videos need to have the same resolution
+  echo   and audio track!
   
   call :collect_base_params video audio
+  
+  call :render_video_ext "%_basefilename%"
+  
+  set "result_file=%_basefilename_full%.joined%result_ext%"
   
   echo.
   echo Switch Audio/Video channels?
@@ -276,6 +285,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xm set result_ext=.mpg
   if /i x%param_s_video_type% == xx set result_ext=.avi
   if /i x%param_s_video_type% == xj set result_ext=.jpg
+  if /i x%param_s_video_type% == xp set result_ext=.png
   if /i x%param_s_video_type% == xw set result_ext=.webm
   if /i x%param_s_video_type% == xg set result_ext=.gif
   if /i x%param_s_video_type% == xi set result_ext=.gif
@@ -307,18 +317,20 @@ rem --- SUBROUTINES
   
   echo.
   echo Select processing of the video data:
-  echo [C]opy source video
+  if not x%action_type%==xjoin echo [C]opy source video
   echo [H]264 encoding (default)
   echo [X]Vid encoding
   echo [M]PEG2 encoding
   echo [W]EBM encoding
-  echo [J]PEG images sequence
-  echo [G]IF animation (HD)
-  echo G[I]F animation (LQ)
+  if not x%action_type%==xjoin echo [J]PEG images sequence
+  if not x%action_type%==xjoin echo [P]NG images sequence
+  if not x%action_type%==xjoin echo [G]IF animation (HD)
+  if not x%action_type%==xjoin echo G[I]F animation (LQ)
   set /p param_s_video_type=^>
   if /i x%param_s_video_type% == x set param_s_video_type=h
   if /i x%param_s_video_type% == xc goto collect_base_params__next
   if /i x%param_s_video_type% == xj goto collect_base_params__bitrate_end
+  if /i x%param_s_video_type% == xp goto collect_base_params__bitrate_end
   if /i x%param_s_video_type% == xg goto collect_base_params__bitrate_end
   if /i x%param_s_video_type% == xi goto collect_base_params__bitrate_end
 
@@ -462,25 +474,17 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xc set default_audio_type=c
   if /i x%param_s_video_type% == xw set default_audio_type=o
   
-  if /i x%param_s_video_type% == xj (
-    set param_s_audio_type=n
-    goto collect_base_params__next
-  )
+  if /i x%param_s_video_type% == xj set param_s_audio_type=n
+  if /i x%param_s_video_type% == xp set param_s_audio_type=n
+  if /i x%param_s_video_type% == xg set param_s_audio_type=n
+  if /i x%param_s_video_type% == xi set param_s_audio_type=n
   
-  if /i x%param_s_video_type% == xg (
-    set param_s_audio_type=n
-    goto collect_base_params__next
-  )
-  
-  if /i x%param_s_video_type% == xi (
-    set param_s_audio_type=n
-    goto collect_base_params__next
-  )
+  if x%param_s_audio_type% == xn goto collect_base_params__next
   
   echo.
   echo Set audio encoder:
   if x%default_audio_type% == xn ( echo [N]o audio ^(default^)  ) else ( echo [N]o audio )
-  if x%default_audio_type% == xc ( echo [C]opy from source file ^(default^)  ) else ( echo [C]opy from source file )
+  if not x%action_type%==xjoin if x%default_audio_type% == xc ( echo [C]opy from source file ^(default^)  ) else ( echo [C]opy from source file )
   echo [W]AV
   echo [F]LAC
   if x%default_audio_type% == xm ( echo [M]P3 - libmp3lame ^(default^)       ) else ( echo [M]P3 - libmp3lame )
@@ -534,6 +538,7 @@ rem --- SUBROUTINES
   if not "%param_s_crf%" == "" goto collect_base_params__next
   if /i x%param_s_video_type% == xc goto collect_base_params__next
   if /i x%param_s_video_type% == xj goto collect_base_params__next
+  if /i x%param_s_video_type% == xp goto collect_base_params__next
   if /i x%param_s_video_type% == xg goto collect_base_params__next
   if /i x%param_s_video_type% == xi goto collect_base_params__next
   
@@ -646,14 +651,15 @@ rem --- SUBROUTINES
   
   set vidstab_logfile=vidstab_%random%%random%%random%.trf
 
-  if not "%param_s_crf%" == "" set crf=-crf %param_s_crf%
-  if not "%param_s_bitrate%" == "" set bitrate=-b:v %param_s_bitrate%k
-  if not "%param_s_fps%" == "" set fps=-r %param_s_fps%
+  if not x%param_s_crf% == x set crf=-crf %param_s_crf%
+  if not x%param_s_bitrate% == x set bitrate=-b:v %param_s_bitrate%k
+  if not x%param_s_fps% == x set fps=-r %param_s_fps%
   
   set encoder=-vcodec libx264
   if /i x%param_s_video_type% == xm set encoder=-vcodec mpeg2video
   if /i x%param_s_video_type% == xx set encoder=-vcodec libxvid
   if /i x%param_s_video_type% == xj set encoder=-f image2
+  if /i x%param_s_video_type% == xp set encoder=-f image2
   if /i x%param_s_video_type% == xw set encoder=-vcodec libvpx
   
   if /i not x%param_s_video_type% == xc if not "%param_s_aspect%" == "" (
@@ -662,8 +668,8 @@ rem --- SUBROUTINES
     if /i x%param_s_resize_mode% == xc set vfilter_resizemode=,crop=min^(iw\,ih*^(%param_s_aspect::=/%^)^):ow/^(%param_s_aspect::=/%^)
     if /i x%param_s_resize_mode% == xp set vfilter_resizemode=,pad=max^(iw\,ih*^(%param_s_aspect::=/%^)^):ow/^(%param_s_aspect::=/%^):^(ow-iw^)/2:^(oh-ih^)/2
 
-    if not "%param_s_videoheight%" == "" (
-      FOR /F "delims=: tokens=1,2" %%a IN ("%param_s_aspect%") do set /a videowidth=%param_s_videoheight% / %%b * %%a
+    if not x%param_s_videoheight% == x (
+      for /f "delims=: tokens=1,2" %%a IN ("%param_s_aspect%") do set /a videowidth=%param_s_videoheight% / %%b * %%a
     )
   )
   
@@ -685,7 +691,13 @@ rem --- SUBROUTINES
     set crf=
   )
   
-  if "%vidsrctype%" == "img" (
+  if /i x%param_s_video_type% == xp (
+    set param_s_2pass=n
+    set bitrate=-qscale:v 2
+    set crf=
+  )
+  
+  if x%vidsrctype% == ximg (
     set source_params=-loop 1
     set shortestflag=-shortest
   )
@@ -693,7 +705,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xg goto render_video_params_animgif
   if /i x%param_s_video_type% == xi goto render_video_params_animgif
   
-  if not "%action_type%" == "join" set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
+  if not x%action_type% == xjoin set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
 
   set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate% %shortestflag%
   
@@ -724,6 +736,7 @@ rem --- SUBROUTINES
   set "result_2passlog_pre=%result_filename_pre%_%random%"
   
   if /i x%param_s_video_type% == xj set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
+  if /i x%param_s_video_type% == xp set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
 
   if not exist "%result_filename%" goto execute_ffmpeg__afterfilenamefind
   
