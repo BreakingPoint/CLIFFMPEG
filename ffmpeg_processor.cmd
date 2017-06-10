@@ -434,7 +434,9 @@ rem --- SUBROUTINES
   
   goto collect_base_params__next
   
-  :collect_base_params__effects
+  :collect_base_params__effects  
+  
+  if x%param_s_video_type%%param_s_audio_type% == xcc goto collect_base_params__next
   
   echo.
   echo Additional effects (combine tags as needed):
