@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.10.2
+echo Simple FFMPEG Action Script - Version 2017.06.10.3
 
 if "%~dpnx1" == "" goto help
 
@@ -586,7 +586,7 @@ rem --- SUBROUTINES
   set afilter_downmix=,aresample=matrix_encoding=dplii
   
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
-  if not "%param_s_effects%" == "%param_s_effects:l=_%" set "afilter_loud=,compand=attacks=0|0:decays=.1|.1:points=-90/-90|-90/-90|0/0:soft-knee=0.01:gain=20:volume=-90:delay=0"
+  if not "%param_s_effects%" == "%param_s_effects:l=_%" set "afilter_loud=,compand=attacks=.001|.001:decays=1|1:points=-90/-12|-12/-9|-9/-7|-6/-5|0/0:soft-knee=0.01:gain=6:volume=-30:delay=0"
 
   if /i "%param_s_audio_type%" == "w" (
     rem set audio_params=-acodec pcm_s16le -ac 2 -ar __SRCAUDIOHZ__ 
