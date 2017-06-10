@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.10.3
+echo Simple FFMPEG Action Script - Version 2017.06.10.4
 
 if "%~dpnx1" == "" goto help
 
@@ -147,15 +147,18 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   set action_batch_mode=v
   
   if not "%~n2" == "" (
-    call :collect_base_params video twopass audio
+    call :collect_base_params video twopass audio effects
   ) else (
-    call :collect_base_params video twopass length audio 
+    call :collect_base_params video twopass length audio effects
   )
   
   goto render_next_file
   
   :action_batch_audio
+  
   call :collect_base_params audio length
+  set param_s_video_type=c
+  call :collect_base_params effects
   
   :render_next_file
   
@@ -235,7 +238,7 @@ rem --- REPLACE AUDIO IN VIDEO
   
   set param_s_video_type=c
   
-  call :collect_base_params audio videochannel
+  call :collect_base_params audio videochannel effects
 
   set filter_params=-map 1:0 -map 0:%param_videochannel%
   
@@ -246,7 +249,7 @@ rem --- REPLACE AUDIO IN VIDEO
   echo.
   echo Render video from image:
   
-  call :collect_base_params video audio length
+  call :collect_base_params video audio length effects
   
   call :render_video_ext
 
@@ -429,26 +432,31 @@ rem --- SUBROUTINES
   echo Empty input causes the using of the original videos FPS.
   set /p param_s_fps=^>
   
-  if "%action_type%" == "join" goto collect_base_params__after_effects
+  goto collect_base_params__next
+  
+  :collect_base_params__effects
   
   echo.
   echo Additional effects (combine tags as needed):
-  echo [1] Weak sharpening
-  echo [2] Medium sharpening
-  echo [3] Strong sharpening
-  echo [G] Add film grain (recomm. only for high bitr. with low quality source)
-  echo [F] Fade in (3 secs from black)
-  echo [I] De-Interlace
-  echo [S] Stabilize
-  echo [P] Interpolate (HD)
-  echo [O] Interpolate (LQ)
-  echo [L] Compressed (loud) audio
+  if not x%param_s_video_type% == xc (
+    echo [1] Weak sharpening
+    echo [2] Medium sharpening
+    echo [3] Strong sharpening
+    echo [G] Add film grain ^(recomm. only for high bitr. with low quality source^)
+    echo [F] Fade in ^(3 secs from black^)
+    echo [I] De-Interlace
+    echo [S] Stabilize
+    echo [P] Interpolate ^(HD^)
+    echo [O] Interpolate ^(LQ^)
+  )
+  if not x%param_s_audio_type% == xc (
+    if x%param_s_video_type% == xc echo [F] Fade in
+    echo [L] Compressed ^(loud^) audio
+  )
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
   if x%param_s_effects% == x set param_s_effects=_
 
-  :collect_base_params__after_effects
-  
   goto collect_base_params__next
   
   :collect_base_params__length
@@ -583,9 +591,9 @@ rem --- SUBROUTINES
     goto eob
   )
 
-  set afilter_downmix=,aresample=matrix_encoding=dplii
+  set "afilter_downmix=,aresample=matrix_encoding=dplii"
   
-  if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
+  if not "%param_s_effects%" == "%param_s_effects:f=_%" set "afilter_fade=,afade=in:curve=esin:d=1.5"
   if not "%param_s_effects%" == "%param_s_effects:l=_%" set "afilter_loud=,compand=attacks=.001|.001:decays=1|1:points=-90/-12|-12/-9|-9/-7|-6/-5|0/0:soft-knee=0.01:gain=6:volume=-30:delay=0"
 
   if /i "%param_s_audio_type%" == "w" (
