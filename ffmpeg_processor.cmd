@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.10.1
+echo Simple FFMPEG Action Script - Version 2017.06.10.2
 
 if "%~dpnx1" == "" goto help
 
@@ -442,6 +442,7 @@ rem --- SUBROUTINES
   echo [S] Stabilize
   echo [P] Interpolate (HD)
   echo [O] Interpolate (LQ)
+  echo [L] Compressed (loud) audio
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
   if x%param_s_effects% == x set param_s_effects=_
@@ -585,6 +586,7 @@ rem --- SUBROUTINES
   set afilter_downmix=,aresample=matrix_encoding=dplii
   
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set afilter_fade=,afade=in:curve=esin:d=1.5
+  if not "%param_s_effects%" == "%param_s_effects:l=_%" set "afilter_loud=,compand=attacks=0|0:decays=.1|.1:points=-90/-90|-90/-90|0/0:soft-knee=0.01:gain=20:volume=-90:delay=0"
 
   if /i "%param_s_audio_type%" == "w" (
     rem set audio_params=-acodec pcm_s16le -ac 2 -ar __SRCAUDIOHZ__ 
@@ -606,7 +608,7 @@ rem --- SUBROUTINES
   if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "3" set audio_params=-acodec ac3 -ac 2 %audiobitrate%
   
-  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_fade%"
+  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_loud% %afilter_fade%"
   
   goto eob
 
