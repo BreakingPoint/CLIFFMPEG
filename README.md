@@ -28,7 +28,7 @@ Available effects:
 
 Replacing audio is done by dropping one video and one music file onto the script file. 
 
-For access as context menu option put a link to it in the send-to folder, so you can execute the script from the context menu on one or more marked files in the file explorer. Folder: C:\Users\$(username)\AppData\Roaming\Microsoft\Windows\SendTo
+For access as context menu option put a link to it in the send-to folder, so you can execute the script from the context menu on one or more marked files in the file explorer. Folder: C:\Users\\$(username)\AppData\Roaming\Microsoft\Windows\SendTo
 
 Needs ffmpeg.exe in the folder of the script file or the ffmpeg.exe folder in PATH.
 http://www.ffmpeg.org/
