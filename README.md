@@ -5,7 +5,7 @@ Simple Windows CLI script FFMPEG wrapper to execute the most common tasks. The u
 Drag'n'drop file(s) onto the script file to:
 - Join videos into a single video.
 - (Batch) process video(s) into new video(s)
-- Generate JPEG gallery from a video
+- Generate JPEG/PNG gallery from a video
 - Generate GIF animation from video
 - Generate video from image and audio file
 - Extract audio file(s) from video file(s).
@@ -26,7 +26,9 @@ Available effects:
 - Add grain (for dithering blocky low quality sources)
 - Fade in from black
 
-Replacing audio is done by dropping one video and one music file onto the script file. Or put a link to it in the send-to folder, so you can execute the script from the context menu on one or more marked files in the file explorer.
+Replacing audio is done by dropping one video and one music file onto the script file. 
+
+For access as context menu option put a link to it in the send-to folder, so you can execute the script from the context menu on one or more marked files in the file explorer. Folder: C:\Users\<username>\AppData\Roaming\Microsoft\Windows\SendTo
 
 Needs ffmpeg.exe in the folder of the script file or the ffmpeg.exe folder in PATH.
 http://www.ffmpeg.org/
