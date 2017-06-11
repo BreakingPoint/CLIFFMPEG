@@ -4,5 +4,4 @@
 - Output result as stream (see https://trac.ffmpeg.org/wiki/StreamingGuide )
 - Encode from stream
 - Better flexibility on joining different video sources (different resolution sources to one resolution result)
-- Speed change but keep sound pitch
 - Zoom
