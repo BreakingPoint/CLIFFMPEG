@@ -25,6 +25,8 @@ Available effects:
 - Frame interpolation
 - Add grain (for dithering blocky low quality sources)
 - Fade in from black
+- Normalize/Compress audio
+- Change speed of audio/video
 
 Replacing audio is done by dropping one video and one music file onto the script file. 
 
