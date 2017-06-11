@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.11.1
+echo Simple FFMPEG Action Script - Version 2017.06.11.2
 
 if "%~dpnx1" == "" goto help
 
@@ -35,6 +35,7 @@ set param_s_2pass=N
 set param_start_at=
 set param_duration=
 set param_videochannel=0
+set param_speedratio=
 
 rem --- Detect Action Type from parameters
 
@@ -458,6 +459,7 @@ rem --- SUBROUTINES
     echo [P] Interpolate ^(HD^)
     echo [O] Interpolate ^(LQ^)
   )
+  echo [E] Change speed
   if not x%param_s_audio_type% == xc (
     if x%param_s_video_type% == xc echo [F] Fade in
     echo [N] Normalized audio
@@ -466,6 +468,15 @@ rem --- SUBROUTINES
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
   if x%param_s_effects% == x set param_s_effects=_
+  
+  if /i "%param_s_effects:e=_%" == "%param_s_effects%" goto collect_base_params__effects_end
+  
+  echo.
+  echo Set speed change ratio [slower 0.5 - 2 faster]
+  echo Empty input causes no speed change
+  set /p param_speedratio=^>
+  
+  :collect_base_params__effects_end
 
   goto collect_base_params__next
   
@@ -587,7 +598,8 @@ rem --- SUBROUTINES
   set audiobitrate=
   set afilter_fade=
   set afilter_downmix=
-  set audio_params=
+  set audio_params= 
+  set afilter_speed=
 
   if "%param_s_audio_type%" == "" set param_s_audio_type=m
 
@@ -606,6 +618,7 @@ rem --- SUBROUTINES
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set "afilter_fade=,afade=in:curve=esin:d=1.5"
   if not "%param_s_effects%" == "%param_s_effects:n=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=2|2:points=-90/-90|-60/-5|0/0:soft-knee=0.01:gain=-.1:volume=-30:delay=0"
   if not "%param_s_effects%" == "%param_s_effects:c=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=.25|.25:points=-90/-90|-60/-7|0/0:soft-knee=0.01:gain=-.4:volume=-30:delay=0"
+  if not x%param_speedratio% == x set afilter_speed=,atempo=%param_speedratio%
 
   if /i "%param_s_audio_type%" == "w" (
     rem set audio_params=-acodec pcm_s16le -ac 2 -ar __SRCAUDIOHZ__ 
@@ -627,7 +640,7 @@ rem --- SUBROUTINES
   if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 %audiobitrate%
   if /i "%param_s_audio_type%" == "3" set audio_params=-acodec ac3 -ac 2 %audiobitrate%
   
-  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_loud% %afilter_fade%"
+  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_speed% %afilter_loud% %afilter_fade%"
   
   goto eob
 
@@ -667,6 +680,7 @@ rem --- SUBROUTINES
   set vfilter_fade=
   set vfilter_deinterl=
   set vfilter_interp=
+  set vfilter_speed=
   set video_params=
   set video_params2=
   
@@ -705,6 +719,7 @@ rem --- SUBROUTINES
   if not "%param_s_effects%" == "%param_s_effects:i=_%" set vfilter_deinterl=,kerndeint
   if not "%param_s_effects%" == "%param_s_effects:p=_%" set vfilter_interp=,minterpolate=mi_mode=mci:me_mode=bidir:vsbmc=1
   if not "%param_s_effects%" == "%param_s_effects:o=_%" set vfilter_interp=,minterpolate=mi_mode=blend
+  if not x%param_speedratio% == x set vfilter_speed=,setpts=(2.5-%param_speedratio%)*PTS
   
   if /i x%param_s_video_type% == xj (
     set param_s_2pass=n
@@ -726,7 +741,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xg goto render_video_params_animgif
   if /i x%param_s_video_type% == xi goto render_video_params_animgif
   
-  if not x%action_type% == xjoin set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
+  if not x%action_type% == xjoin set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_speed% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
 
   set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate% %shortestflag%
   
@@ -738,12 +753,12 @@ rem --- SUBROUTINES
   set bitrate=
   set crf=
   
-  set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% ,palettegen=stats_mode=full"
+  set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_speed% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% ,palettegen=stats_mode=full"
   set video_params=%vfiltergraph% %fps% %aspect%
   rem for GIF:
   set gif_dither=bayer:bayer_scale=3
   if /i x%param_s_video_type% == xi set gif_dither=none
-  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] paletteuse=dither=%gif_dither%"
+  set vfiltergraph2=-lavfi "null %vfilter_deinterl% %vfilter_speed% %vfilter_interp% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise% [x]; [x][1:v] paletteuse=dither=%gif_dither%"
   set video_params2=%vfiltergraph2% %fps% %aspect%
 
   goto eob
