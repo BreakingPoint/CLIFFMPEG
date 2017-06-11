@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.10.4
+echo Simple FFMPEG Action Script - Version 2017.06.11.1
 
 if "%~dpnx1" == "" goto help
 
@@ -69,7 +69,8 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
 
 :action_join
 
-  title "%~n1"
+  set "boxtitle=%~n1"
+  title %boxtitle%
   
   set maps=
   set maps_sw=
@@ -118,6 +119,8 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   call :render_audio_params 
   call :render_video_params
   call :execute_ffmpeg "%result_file%"
+  
+  title [X]%boxtitle%
   
   pause
   
@@ -180,7 +183,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
     )
   )
   
-  title "%~n1"
+  title %~n1
   
   call :render_stream_params 
   call :render_audio_params 
@@ -193,6 +196,8 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   set sources=%start_at% -i %1
   
   call :execute_ffmpeg "%result_file%"
+  
+  title [X]%~n1
 
   shift
   
@@ -224,11 +229,11 @@ rem --- REPLACE AUDIO IN VIDEO
   if %audiofileidx% == 1 (
     set sources=-i "%~dpnx2" -i "%~dpnx1" 
     set "result_file=%~dpn2.new_audio%~x2"
-    set boxtitle="%~n2"
+    set "boxtitle=%~n2"
   ) else (
     set sources=-i "%~dpnx1" -i "%~dpnx2" 
     set "result_file=%~dpn1.new_audio%~x1"
-    set boxtitle="%~n1"
+    set "boxtitle=%~n1"
   )
   
   title %boxtitle%
@@ -256,11 +261,11 @@ rem --- REPLACE AUDIO IN VIDEO
   if %audiofileidx% == 1 (
     set sources=-i "%~dpnx2" -i "%~dpnx1" 
     set "result_file=%~dpn2%result_ext%"
-    set boxtitle="%~n2"
+    set "boxtitle=%~n2"
   ) else (
     set sources=-i "%~dpnx1" -i "%~dpnx2" 
     set "result_file=%~dpn1%result_ext%"
-    set boxtitle="%~n1"
+    set "boxtitle=%~n1"
   )
   
   title %boxtitle%
@@ -272,6 +277,8 @@ rem --- REPLACE AUDIO IN VIDEO
   call :render_video_params 
 
   call :execute_ffmpeg "%result_file%"
+  
+  title [X]%boxtitle%
   
   pause
 
@@ -453,7 +460,8 @@ rem --- SUBROUTINES
   )
   if not x%param_s_audio_type% == xc (
     if x%param_s_video_type% == xc echo [F] Fade in
-    echo [L] Compressed ^(loud^) audio
+    echo [N] Normalized audio
+    echo [C] Compressed audio
   )
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
@@ -596,7 +604,8 @@ rem --- SUBROUTINES
   set "afilter_downmix=,aresample=matrix_encoding=dplii"
   
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set "afilter_fade=,afade=in:curve=esin:d=1.5"
-  if not "%param_s_effects%" == "%param_s_effects:l=_%" set "afilter_loud=,compand=attacks=.001|.001:decays=1|1:points=-90/-12|-12/-9|-9/-7|-6/-5|0/0:soft-knee=0.01:gain=6:volume=-30:delay=0"
+  if not "%param_s_effects%" == "%param_s_effects:n=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=2|2:points=-90/-90|-60/-5|0/0:soft-knee=0.01:gain=-.1:volume=-30:delay=0"
+  if not "%param_s_effects%" == "%param_s_effects:c=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=.25|.25:points=-90/-90|-60/-7|0/0:soft-knee=0.01:gain=-.4:volume=-30:delay=0"
 
   if /i "%param_s_audio_type%" == "w" (
     rem set audio_params=-acodec pcm_s16le -ac 2 -ar __SRCAUDIOHZ__ 
