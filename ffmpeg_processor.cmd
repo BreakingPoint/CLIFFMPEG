@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2017.06.11.2
+echo Simple FFMPEG Action Script - Version 2017.08.13.1
 
 if "%~dpnx1" == "" goto help
 
@@ -41,7 +41,7 @@ rem --- Detect Action Type from parameters
 
 set action_type=
 
-set f1_isaudio=x                                                                                                                         
+set f1_isaudio=x
 set f2_isaudio=x
 if "%~dpnx2" == "" (
   set action_type=batch
