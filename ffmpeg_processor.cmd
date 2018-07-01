@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2018.07.01.1
+echo Simple FFMPEG Action Script - Version 2018.07.01.2
 
 if "%~dpnx1" == "" goto help
 
@@ -465,6 +465,7 @@ rem --- SUBROUTINES
     echo [N] Normalized audio
     echo [C] Compressed audio
     echo [T] Trim digital silence
+    echo [A] Trim analog silence
   )
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
@@ -602,6 +603,7 @@ rem --- SUBROUTINES
   set afilter_trim=
   set audio_params= 
   set afilter_speed=
+  set afilter_silentintro=
 
   if "%param_s_audio_type%" == "" set param_s_audio_type=m
 
@@ -620,7 +622,14 @@ rem --- SUBROUTINES
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set "afilter_fade=,afade=in:curve=esin:d=1.5"
   if not "%param_s_effects%" == "%param_s_effects:n=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=2|2:points=-90/-90|-60/-5|0/0:soft-knee=0.01:gain=-.1:volume=-30:delay=0"
   if not "%param_s_effects%" == "%param_s_effects:c=_%" set "afilter_loud=,compand=attacks=.0001|.0001:decays=.25|.25:points=-90/-90|-60/-7|0/0:soft-knee=0.01:gain=-.4:volume=-30:delay=0"
-  if not "%param_s_effects%" == "%param_s_effects:t=_%" set "afilter_trim=,silenceremove=start_periods=1:stop_periods=1"
+  if not "%param_s_effects%" == "%param_s_effects:t=_%" (
+    set "afilter_trim=,silenceremove=start_periods=1:stop_periods=1"
+    set "afilter_silentintro=,adelay=400|400"
+  )
+  if not "%param_s_effects%" == "%param_s_effects:a=_%" (
+    set "afilter_trim=,silenceremove=start_periods=1:stop_periods=1:start_threshold=-30dB"
+    set "afilter_silentintro=,adelay=400|400"
+  )
   if not x%param_speedratio% == x set afilter_speed=,atempo=%param_speedratio%
 
   if x%param_audiobitrate% == x goto render_audio_params__afterbitrate
@@ -637,7 +646,7 @@ rem --- SUBROUTINES
   if /i "%param_s_audio_type%" == "w" set audio_params=-acodec pcm_s16le -ac 2
   if /i "%param_s_audio_type%" == "f" set audio_params=-acodec flac -ac 2
   
-  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_trim% %afilter_speed% %afilter_loud% %afilter_fade%"
+  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_trim% %afilter_speed% %afilter_loud% %afilter_fade% %afilter_silentintro%"
   
   goto eob
 
