@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2018.07.01.2
+echo Simple FFMPEG Action Script - Version 2018.07.15.1
 
 if "%~dpnx1" == "" goto help
 
@@ -81,7 +81,7 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   set "_basefilename_full=%~dpnx1"
   
   echo.
-  echo Videos are joined in following order:
+  echo Files are joined in following order:
   echo - If you want a different order, sort the files diffently in the file explorer
   echo   and grab the first file in the order.
   
@@ -104,10 +104,14 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   
   call :collect_base_params video audio
   
-  call :render_video_ext "%_basefilename%"
+  if /i x%param_s_video_type% == xn (
+    call :render_audio_ext "%_basefilename%"
+  ) else (
+    call :render_video_ext "%_basefilename%"
+  )
   
   set "result_file=%_basefilename_full%.joined%result_ext%"
-  
+
   echo.
   echo Switch Audio/Video channels?
   echo Use only, if you got an audio channel error the first try!
@@ -117,8 +121,8 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   if /i x%channel_sw% == xy set maps=%maps_sw%
   
   call :render_filtercomplex_params  
-  call :render_audio_params 
-  call :render_video_params
+  call :render_audio_params
+  if /i not x%param_s_video_type% == xn call :render_video_params
   call :execute_ffmpeg "%result_file%"
   
   title [X]%boxtitle%
@@ -333,6 +337,7 @@ rem --- SUBROUTINES
   echo [X]Vid encoding
   echo [M]PEG2 encoding
   echo [W]EBM encoding
+  if x%action_type%==xjoin echo [N]o video (audio only)
   if not x%action_type%==xjoin echo [J]PEG images sequence
   if not x%action_type%==xjoin echo [P]NG images sequence
   if not x%action_type%==xjoin echo [G]IF animation (HD)
@@ -340,6 +345,7 @@ rem --- SUBROUTINES
   set /p param_s_video_type=^>
   if /i x%param_s_video_type% == x set param_s_video_type=h
   if /i x%param_s_video_type% == xc goto collect_base_params__next
+  if /i x%param_s_video_type% == xn goto collect_base_params__next
   if /i x%param_s_video_type% == xj goto collect_base_params__bitrate_end
   if /i x%param_s_video_type% == xp goto collect_base_params__bitrate_end
   if /i x%param_s_video_type% == xg goto collect_base_params__bitrate_end
@@ -448,7 +454,7 @@ rem --- SUBROUTINES
   
   echo.
   echo Additional effects (combine tags as needed):
-  if not x%param_s_video_type% == xc (
+  if not x%param_s_video_type% == xc if not x%param_s_video_type% == xn (
     echo [1] Weak sharpening
     echo [2] Medium sharpening
     echo [3] Strong sharpening
@@ -515,7 +521,7 @@ rem --- SUBROUTINES
   
   echo.
   echo Set audio encoder:
-  if x%default_audio_type% == xn ( echo [N]o audio ^(default^)  ) else ( echo [N]o audio )
+  if /i not x%param_s_video_type% == xn if x%default_audio_type% == xn ( echo [N]o audio ^(default^)  ) else ( echo [N]o audio )
   if not x%action_type%==xjoin if x%default_audio_type% == xc ( echo [C]opy from source file ^(default^)  ) else ( echo [C]opy from source file )
   echo [W]AV
   echo [F]LAC
@@ -592,7 +598,12 @@ rem --- SUBROUTINES
 
 
 :render_filtercomplex_params
-  set filter_params=-filter_complex "%maps% concat=n=%counter%:v=1:a=1 [v] [a]" -map "[v]" -map "[a]"
+  if /i x%param_s_video_type%==xn (
+    rem audio only
+    set filter_params=-filter_complex "concat=n=%counter%:v=0:a=1"
+  ) else (
+    set filter_params=-filter_complex "%maps% concat=n=%counter%:v=1:a=1 [v] [a]" -map "[v]" -map "[a]"
+  )
   goto eob
 
          
