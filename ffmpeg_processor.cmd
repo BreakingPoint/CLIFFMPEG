@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2018.07.15.1
+echo Simple FFMPEG Action Script - Version 2018.12.31.1
 
 if "%~dpnx1" == "" goto help
 
@@ -719,14 +719,14 @@ rem --- SUBROUTINES
   if /i not x%param_s_video_type% == xc if not "%param_s_aspect%" == "" (
     set aspect=-aspect %param_s_aspect%
 
-    if /i x%param_s_resize_mode% == xc set vfilter_resizemode=,crop=min^(iw\,ih*^(%param_s_aspect::=/%^)^):ow/^(%param_s_aspect::=/%^)
-    if /i x%param_s_resize_mode% == xp set vfilter_resizemode=,pad=max^(iw\,ih*^(%param_s_aspect::=/%^)^):ow/^(%param_s_aspect::=/%^):^(ow-iw^)/2:^(oh-ih^)/2:#000000
+    if /i x%param_s_resize_mode% == xc set vfilter_resizemode=,crop=min^(iw\,2*ceil^(^(ih*^(%param_s_aspect::=/%^)^)*0.5^)^):ow/^(%param_s_aspect::=/%^)
+    if /i x%param_s_resize_mode% == xp set vfilter_resizemode=,pad=max^(iw\,2*ceil^(^(ih*^(%param_s_aspect::=/%^)^)*0.5^)^):ow/^(%param_s_aspect::=/%^):^(ow-iw^)/2:^(oh-ih^)/2:#000000
   )
   
   rem todo: pad with blurred background
   rem ffmpeg -i input.mp4 -lavfi "[0:v]scale=iw:2*trunc(iw*16/18),boxblur=luma_radius=min(h\,w)/20:luma_power=1:chroma_radius=min(cw\,ch)/20:chroma_power=1[bg];[bg][0:v]overlay=(W-w)/2:(H-h)/2,setsar=1" {-other parameters} output.mp4
-  
-  if not x%param_s_videoheight% == x set vfilter_scale=,scale=-1:%param_s_videoheight%:flags=lanczos
+
+  if not x%param_s_videoheight% == x set vfilter_scale=,scale=2*ceil((%param_s_videoheight%*^(%param_s_aspect::=/%))*0.5):%param_s_videoheight%:flags=lanczos
   
   if not "%param_s_effects%" == "%param_s_effects:s=_%" set vfilter_deshake=,vidstabtransform=smoothing=20:optzoom=0:zoom=5:optalgo=avg:relative=1:input=%vidstab_logfile%
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set vfilter_fade=,fade=in:st=0.5:d=2.5
