@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2018.12.31.1
+echo Simple FFMPEG Action Script - Version 2019.01.17.1
 
 if "%~dpnx1" == "" goto help
 
@@ -472,6 +472,7 @@ rem --- SUBROUTINES
     echo [C] Compressed audio
     echo [T] Trim digital silence
     echo [A] Trim analog silence
+    echo [M] Mono audio
   )
   echo Examples: "2", "1G", "F"
   set /p param_s_effects=^>
@@ -608,13 +609,14 @@ rem --- SUBROUTINES
 
          
 :render_audio_params 
-  set audiobitrate=
   set afilter_fade=
   set afilter_downmix=
   set afilter_trim=
-  set audio_params= 
   set afilter_speed=
   set afilter_silentintro=
+  set audiobitrate=
+  set audiochannels=2
+  set audio_params= 
 
   if "%param_s_audio_type%" == "" set param_s_audio_type=m
 
@@ -642,20 +644,31 @@ rem --- SUBROUTINES
     set "afilter_silentintro=,adelay=400|400"
   )
   if not x%param_speedratio% == x set afilter_speed=,atempo=%param_speedratio%
+  if not "%param_s_effects%" == "%param_s_effects:m=_%" (
+    set audiochannels=1
+    set "afilter_downmix=,aresample=rematrix_maxval=1.0"
+  )
+
+  set audiochannels=-ac %audiochannels%
 
   if x%param_audiobitrate% == x goto render_audio_params__afterbitrate
 
-  set audiobitrate=-ab %param_audiobitrate%k
-  if /i %param_audiobitrate% LEQ 10 set audiobitrate=-aq %param_audiobitrate%
+  set audiobitrate=%param_audiobitrate%
+  
+  if /i %audiobitrate% LEQ 10 (
+    set audiobitrate=-aq %audiobitrate%
+  ) else (
+    set audiobitrate=-ab %audiobitrate%k
+  )
   :render_audio_params__afterbitrate
 
-  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -profile:a aac_main -ac 2 %audiobitrate% -bsf:a aac_adtstoasc
-  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -joint_stereo 1 -compression_level 0 -ac 2 %audiobitrate%
-  if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 -ac 2 %audiobitrate%
-  if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -ac 2 -compression_level 10 %audiobitrate%
-  if /i "%param_s_audio_type%" == "3" set audio_params=-acodec ac3 -ac 2 %audiobitrate%
-  if /i "%param_s_audio_type%" == "w" set audio_params=-acodec pcm_s16le -ac 2
-  if /i "%param_s_audio_type%" == "f" set audio_params=-acodec flac -ac 2
+  if /i "%param_s_audio_type%" == "a" set audio_params=-strict -2 -acodec aac -profile:a aac_main %audiochannels% %audiobitrate% -bsf:a aac_adtstoasc
+  if /i "%param_s_audio_type%" == "m" set audio_params=-acodec libmp3lame -joint_stereo 1 -compression_level 0 %audiochannels% %audiobitrate%
+  if /i "%param_s_audio_type%" == "2" set audio_params=-acodec mp2 %audiochannels% %audiobitrate%
+  if /i "%param_s_audio_type%" == "o" set audio_params=-acodec libvorbis -compression_level 10 %audiochannels% %audiobitrate%
+  if /i "%param_s_audio_type%" == "3" set audio_params=-acodec ac3 %audiochannels% %audiobitrate%
+  if /i "%param_s_audio_type%" == "w" set audio_params=-acodec pcm_s16le %audiochannels%
+  if /i "%param_s_audio_type%" == "f" set audio_params=-acodec flac %audiochannels%
   
   if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_trim% %afilter_speed% %afilter_loud% %afilter_fade% %afilter_silentintro%"
   
