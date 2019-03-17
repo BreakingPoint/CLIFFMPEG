@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2019.01.17.1
+echo Simple FFMPEG Action Script - Version 2019.03.17.1
 
 if "%~dpnx1" == "" goto help
 
@@ -24,6 +24,7 @@ set vidsrctype=video
 
 set param_s_audio_type=
 set param_s_video_type=
+set param_s_video_type_isvideo=
 set param_s_videoheight=
 set param_s_crf=
 set param_s_bitrate=
@@ -82,8 +83,9 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   
   echo.
   echo Files are joined in following order:
-  echo - If you want a different order, sort the files diffently in the file explorer
-  echo   and grab the first file in the order.
+  echo - If you want a different order, sort the files diffently in the file explorer,
+  echo   select them from last to first and use the first file in the order for the
+  echo   drag/drop or context menu operation.
   
   echo.
 
@@ -99,10 +101,11 @@ rem --- JOIN VIDEOS INTO NEW RENDERING
   if not "%~n1" == "" goto collect_next_file
 
   echo.
-  echo - IMPORTANT! For the join to work, all videos need to have the same resolution
-  echo   and audio track!
+  echo - IMPORTANT! For the join to work, all videos need to have the same resolution,
+  echo   aspect ratio and audio track index! If not, process the videos first (in a 
+  echo   batch run) so they all have matching properties.
   
-  call :collect_base_params video audio
+  call :collect_base_params video audio effects
   
   if /i x%param_s_video_type% == xn (
     call :render_audio_ext "%_basefilename%"
@@ -337,19 +340,26 @@ rem --- SUBROUTINES
   echo [X]Vid encoding
   echo [M]PEG2 encoding
   echo [W]EBM encoding
-  if x%action_type%==xjoin echo [N]o video (audio only)
-  if not x%action_type%==xjoin echo [J]PEG images sequence
-  if not x%action_type%==xjoin echo [P]NG images sequence
-  if not x%action_type%==xjoin echo [G]IF animation (HD)
-  if not x%action_type%==xjoin echo G[I]F animation (LQ)
+  echo [J]PEG images sequence
+  echo [P]NG images sequence
+  if x%action_type%==xjoin (
+    echo [N]o video ^(audio only^)
+  )
+  if not x%action_type%==xjoin (
+    echo [G]IF animation ^(HD^)
+    echo G[I]F animation ^(LQ^) 
+  )
   set /p param_s_video_type=^>
+  set param_s_video_type_isvideo=1
   if /i x%param_s_video_type% == x set param_s_video_type=h
   if /i x%param_s_video_type% == xc goto collect_base_params__next
   if /i x%param_s_video_type% == xn goto collect_base_params__next
-  if /i x%param_s_video_type% == xj goto collect_base_params__bitrate_end
-  if /i x%param_s_video_type% == xp goto collect_base_params__bitrate_end
-  if /i x%param_s_video_type% == xg goto collect_base_params__bitrate_end
-  if /i x%param_s_video_type% == xi goto collect_base_params__bitrate_end
+  if /i x%param_s_video_type% == xj set param_s_video_type_isvideo=0
+  if /i x%param_s_video_type% == xp set param_s_video_type_isvideo=0
+  if /i x%param_s_video_type% == xg set param_s_video_type_isvideo=0
+  if /i x%param_s_video_type% == xi set param_s_video_type_isvideo=0
+
+  if %param_s_video_type_isvideo% == 0 goto collect_base_params__bitrate_end
 
   echo.
   echo Set video encoding quality by:
@@ -412,13 +422,15 @@ rem --- SUBROUTINES
   
   :collect_base_params__bitrate_end
   
-  if "%action_type%" == "join" goto collect_base_params__after_ratio
+  if x%action_type% == xjoin goto collect_base_params__afterlineheight
   
   echo.
   echo Set line height of video
   echo Examples: "360", "480", "720", "1080"
   echo Empty input causes the using of the original videos height.
   set /p param_s_videoheight=^>
+
+  :collect_base_params__afterlineheight
 
   echo.
   echo Set the aspect ratio of the video.
@@ -454,24 +466,32 @@ rem --- SUBROUTINES
   
   echo.
   echo Additional effects (combine tags as needed):
-  if not x%param_s_video_type% == xc if not x%param_s_video_type% == xn (
-    echo [1] Weak sharpening
-    echo [2] Medium sharpening
-    echo [3] Strong sharpening
-    echo [G] Add film grain ^(recomm. only for high bitr. with low quality source^)
-    echo [F] Fade in ^(3 secs from black^)
-    echo [I] De-Interlace
-    echo [S] Stabilize
-    echo [P] Interpolate ^(HD^)
-    echo [O] Interpolate ^(LQ^)
-  )
-  echo [E] Change speed
-  if not x%param_s_audio_type% == xc (
-    if x%param_s_video_type% == xc echo [F] Fade in
-    echo [N] Normalized audio
-    echo [C] Compressed audio
-    echo [T] Trim digital silence
-    echo [A] Trim analog silence
+  if not x%action_type%==xjoin (
+    if not x%param_s_video_type% == xc if not x%param_s_video_type% == xn (
+      echo [1] Weak sharpening
+      echo [2] Medium sharpening
+      echo [3] Strong sharpening
+      echo [G] Add film grain ^(recomm. only for high bitr. with low quality source^)
+      echo [I] De-Interlace
+      if %param_s_video_type_isvideo% == 1 (
+        echo [F] Fade in ^(3 secs from black^)
+        echo [S] Stabilize
+        echo [P] Interpolate ^(HD^)
+        echo [O] Interpolate ^(LQ^)
+      )
+    )
+    echo [E] Change speed
+    if not x%param_s_audio_type% == xc (
+      if %param_s_video_type_isvideo% == 1 (
+        if x%param_s_video_type% == xc echo [F] Fade in
+        echo [N] Normalized audio
+        echo [C] Compressed audio
+        echo [T] Trim digital silence
+        echo [A] Trim analog silence
+        echo [M] Mono audio
+      )
+    )
+  ) else (
     echo [M] Mono audio
   )
   echo Examples: "2", "1G", "F"
@@ -576,10 +596,7 @@ rem --- SUBROUTINES
   
   if not "%param_s_crf%" == "" goto collect_base_params__next
   if /i x%param_s_video_type% == xc goto collect_base_params__next
-  if /i x%param_s_video_type% == xj goto collect_base_params__next
-  if /i x%param_s_video_type% == xp goto collect_base_params__next
-  if /i x%param_s_video_type% == xg goto collect_base_params__next
-  if /i x%param_s_video_type% == xi goto collect_base_params__next
+  if %param_s_video_type_isvideo% == 0 goto collect_base_params__next
   
   echo.
   echo Two-Pass encoding?
@@ -630,6 +647,8 @@ rem --- SUBROUTINES
     goto eob
   )
 
+  if x%action_type% == xjoin goto render_audio_params__aftereffects
+
   set "afilter_downmix=,aresample=matrix_encoding=dplii"
   
   if not "%param_s_effects%" == "%param_s_effects:f=_%" set "afilter_fade=,afade=in:curve=esin:d=1.5"
@@ -644,10 +663,11 @@ rem --- SUBROUTINES
     set "afilter_silentintro=,adelay=400|400"
   )
   if not x%param_speedratio% == x set afilter_speed=,atempo=%param_speedratio%
-  if not "%param_s_effects%" == "%param_s_effects:m=_%" (
-    set audiochannels=1
-    set "afilter_downmix=,aresample=rematrix_maxval=1.0"
-  )
+  if not "%param_s_effects%" == "%param_s_effects:m=_%" set "afilter_downmix=,aresample=rematrix_maxval=1.0"
+
+  :render_audio_params__aftereffects
+
+  if not "%param_s_effects%" == "%param_s_effects:m=_%" set audiochannels=1
 
   set audiochannels=-ac %audiochannels%
 
@@ -670,8 +690,9 @@ rem --- SUBROUTINES
   if /i "%param_s_audio_type%" == "w" set audio_params=-acodec pcm_s16le %audiochannels%
   if /i "%param_s_audio_type%" == "f" set audio_params=-acodec flac %audiochannels%
   
-  if not "%action_type%" == "join" set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_trim% %afilter_speed% %afilter_loud% %afilter_fade% %afilter_silentintro%"
-  
+  if not x%action_type% == xjoin set audio_params=%audio_params% -af "anull %afilter_downmix% %afilter_trim% %afilter_speed% %afilter_loud% %afilter_fade% %afilter_silentintro%"
+  rem else error: "-vf/-af/-filter and -filter_complex cannot be used together for the same stream"
+
   goto eob
 
 
@@ -727,11 +748,11 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xp set encoder=-f image2
   if /i x%param_s_video_type% == xw set encoder=-vcodec libvpx
 
+  if x%action_type% == xjoin goto render_video_params__aftereffects
+
   if /i x%vidsrctype% == ximg set vfilter_format=,format=rgb24
   
   if /i not x%param_s_video_type% == xc if not "%param_s_aspect%" == "" (
-    set aspect=-aspect %param_s_aspect%
-
     if /i x%param_s_resize_mode% == xc set vfilter_resizemode=,crop=min^(iw\,2*ceil^(^(ih*^(%param_s_aspect::=/%^)^)*0.5^)^):ow/^(%param_s_aspect::=/%^)
     if /i x%param_s_resize_mode% == xp set vfilter_resizemode=,pad=max^(iw\,2*ceil^(^(ih*^(%param_s_aspect::=/%^)^)*0.5^)^):ow/^(%param_s_aspect::=/%^):^(ow-iw^)/2:^(oh-ih^)/2:#000000
   )
@@ -759,6 +780,10 @@ rem --- SUBROUTINES
   if /i %param_speedratio% GTR 1 set vfilter_speed=,setpts=(1-((%param_speedratio%-1)*.5))*PTS
   
   :render_video_params__afterspeed
+
+  :render_video_params__aftereffects
+
+  if /i not x%param_s_video_type% == xc if not "%param_s_aspect%" == "" set aspect=-aspect %param_s_aspect%
   
   if /i x%param_s_video_type% == xj (
     set param_s_2pass=n
@@ -781,6 +806,7 @@ rem --- SUBROUTINES
   if /i x%param_s_video_type% == xi goto render_video_params_animgif
   
   if not x%action_type% == xjoin set vfiltergraph=-vf "null %vfilter_deinterl% %vfilter_speed% %vfilter_interp% %vfilter_format% %vfilter_resizemode% %vfilter_scale% %vfilter_deshake% %vfilter_fade% %vfilter_unsharp% %vfilter_noise%"
+  rem else error: "-vf/-af/-filter and -filter_complex cannot be used together for the same stream"
 
   set video_params=%vfiltergraph% %encoder% %crf% %fps% %aspect% %bitrate% %shortestflag%
   
