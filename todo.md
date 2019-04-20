@@ -1,7 +1,8 @@
 - Extend source video to 16:9 by blurring+zooming the source and fill the "black bars" with the result (Example: https://i1.creativecow.net/u/269047/example.jpg )
-- Join multiple audio files into one
 - Preset selection and Q&A skip if selected
 - Output result as stream (see https://trac.ffmpeg.org/wiki/StreamingGuide )
 - Encode from stream
 - Better flexibility on joining different video sources (different resolution sources to one resolution result)
+  - Migrate to filter_complex
 - Zoom
+- Auto clip silence from audio files
