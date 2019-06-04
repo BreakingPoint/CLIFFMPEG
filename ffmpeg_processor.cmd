@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2019.03.17.1
+echo Simple FFMPEG Action Script - Version 2019.06.04.1
 
 if "%~dpnx1" == "" goto help
 
@@ -166,6 +166,8 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   goto render_next_file
   
   :action_batch_audio
+
+  set param_s_video_type_isvideo=0
   
   call :collect_base_params audio length
   set param_s_video_type=c
@@ -221,6 +223,7 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
 rem --- REPLACE AUDIO IN VIDEO
 
 :action_replace_audio
+  set param_s_video_type_isvideo=1
   set boxtitle=
   
   rem Detect audio and video file + audio type:
