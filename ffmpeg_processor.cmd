@@ -3,7 +3,7 @@
 rem --- MAIN ---
 
 echo.
-echo Simple FFMPEG Action Script - Version 2019.06.04.1
+echo Simple FFMPEG Action Script - Version 2019.07.21.1
 
 if "%~dpnx1" == "" goto help
 
@@ -175,6 +175,10 @@ rem --- BATCH-PROCESS VIDEOS INTO NEW RENDERING
   
   :render_next_file
   
+  set vidsrctype=video
+  set "sourceextender=%~x1"
+  if not "%sourceextender%%sourceextender%%sourceextender%%sourceextender%%sourceextender%" == "%sourceextender:jpeg=_%%sourceextender:jpg=_%%sourceextender:gif=_%%sourceextender:png=_%%sourceextender:bmp=_%" set vidsrctype=img
+
   set result_ext=
   
   if /i not "%action_batch_mode%" == "v" (
@@ -235,7 +239,7 @@ rem --- REPLACE AUDIO IN VIDEO
   
   if not "%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%%sourceextenders%" == "%sourceextenders:jpeg=_%%sourceextenders:jpg=_%%sourceextenders:gif=_%%sourceextenders:png=_%%sourceextenders:bmp=_%" set vidsrctype=img
   
-  if "%vidsrctype%" == "img" goto action_replace_audio__imagevid
+  if x%vidsrctype% == ximg goto action_replace_audio__imagevid
   
   if %audiofileidx% == 1 (
     set sources=-i "%~dpnx2" -i "%~dpnx1" 
@@ -343,14 +347,16 @@ rem --- SUBROUTINES
   echo [X]Vid encoding
   echo [M]PEG2 encoding
   echo [W]EBM encoding
-  echo [J]PEG images sequence
-  echo [P]NG images sequence
+  if not %action_type% == replace_audio (
+    echo [J]PEG images sequence
+    echo [P]NG images sequence
+    if not %action_type% == join (
+      echo [G]IF animation ^(HD^)
+      echo G[I]F animation ^(LQ^) 
+    )
+  )
   if x%action_type%==xjoin (
     echo [N]o video ^(audio only^)
-  )
-  if not x%action_type%==xjoin (
-    echo [G]IF animation ^(HD^)
-    echo G[I]F animation ^(LQ^) 
   )
   set /p param_s_video_type=^>
   set param_s_video_type_isvideo=1
@@ -753,7 +759,7 @@ rem --- SUBROUTINES
 
   if x%action_type% == xjoin goto render_video_params__aftereffects
 
-  if /i x%vidsrctype% == ximg set vfilter_format=,format=rgb24
+  if x%vidsrctype% == ximg set vfilter_format=,format=rgb24
   
   if /i not x%param_s_video_type% == xc if not "%param_s_aspect%" == "" (
     if /i x%param_s_resize_mode% == xc set vfilter_resizemode=,crop=min^(iw\,2*ceil^(^(ih*^(%param_s_aspect::=/%^)^)*0.5^)^):ow/^(%param_s_aspect::=/%^)
@@ -800,9 +806,15 @@ rem --- SUBROUTINES
     set crf=
   )
   
-  if x%vidsrctype% == ximg (
-    set source_params=-loop 1
-    set shortestflag=-shortest
+  if %action_type% == replace_audio (
+    if x%vidsrctype% == ximg (
+      if /i not x%param_s_video_type% == xg (
+        if /i not x%param_s_video_type% == xi (
+          set source_params=-loop 1
+          set shortestflag=-shortest
+        )
+      )
+    )
   )
   
   if /i x%param_s_video_type% == xg goto render_video_params_animgif
@@ -839,8 +851,10 @@ rem --- SUBROUTINES
   set "result_filename=%result_filename_pre%%result_filename_post%"
   set "result_2passlog_pre=%result_filename_pre%_%random%"
   
-  if /i x%param_s_video_type% == xj set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
-  if /i x%param_s_video_type% == xp set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
+  if not x%vidsrctype% == ximg (
+    if /i x%param_s_video_type% == xj set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
+    if /i x%param_s_video_type% == xp set "result_filename=%result_filename_pre%.%%12d%result_filename_post%"
+  )
 
   if not exist "%result_filename%" goto execute_ffmpeg__afterfilenamefind
   
